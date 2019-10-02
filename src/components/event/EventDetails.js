@@ -11,7 +11,7 @@ import {
     FlatList,
     Linking
 } from 'react-native';
-import {Button} from '../general'
+import { Button, NavBar } from '../general'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
     goToCreateEvent,
@@ -27,7 +27,7 @@ import {
     convertNumToDate,
     fetchAllUsers,
     emailListUsers,
-} from '../../actions'
+} from '../../ducks'
 import { Actions } from 'react-native-router-flux';
 
 const dimension = Dimensions.get('screen');
@@ -36,37 +36,46 @@ class EventDetails extends Component {
     
 
     componentWillMount() {
-
-        this.props.fetchAllUsers()
-        this.props.pageLoad()
         {this.setState({modalVisible: false})}
         this.props.fetchCode(this.props.eventID)
-        this.props.getPrivilege()
+        if (this.props.privilege !== undefined && this.props.privilege.board) {
+            this.props.fetchAllUsers()
+        }
     }
 
     convertNumToDate(date) {
         var months = ["Jan", "Feb", "Mar", "April", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
         temp_date = date.split("-");
-        return months[Number(temp_date[1]) - 1] + " " + temp_date[2];
+		return `${months[Number(temp_date[1]) - 1]} ${temp_date[2]}`;
     }
 
     renderCodeBox(){
+        const {
+            modalBackground,
+            modalContent,
+            modalText,
+            modalTextInput,
+            codeText,
+            container,
+            headerTextStyle,
+            textColor
+        } = styles
         if (this.props.privilege !== undefined && this.props.privilege.board) {
             return (
                 <Modal
                 transparent={true}
                 visible={this.state.modalVisible}>
-                     <View style={styles.modalBackground}>
-                        <View style={styles.modalContent}>
+                     <View style={modalBackground}>
+                        <View style={modalContent}>
                             <TouchableOpacity onPress={() => {
                                             this.setState({modalVisible: false})
                                             this.props.closeCheckIn(this.props.eventID)}}>
                             <Text>X</Text>
                             </TouchableOpacity>
-                            <Text style={styles.modalText}>The event check-in is now open!</Text>
-                            <Text style={styles.modalText}>Please provide everyone this code</Text>
-                            <Text style={styles.codeText}>{this.props.code}</Text>
-                            <Text style={styles.modalText}>When you close this box the event check-in will close</Text>
+                            <Text style={[modalText, textColor]}>The event check-in is now open!</Text>
+                            <Text style={[modalText, textColor]}>Please provide everyone this code</Text>
+                            <Text style={codeText}>{this.props.code}</Text>
+                            <Text style={[modalText, textColor]}>When you close this box the event check-in will close</Text>
 
                         </View>
                     </View>
@@ -83,15 +92,15 @@ class EventDetails extends Component {
         }}
         visible={this.state.modalVisible}
         >
-            <View style={styles.modalBackground}>
-                <View style={styles.modalContent}>
+            <View style={modalBackground}>
+                <View style={modalContent}>
                     <TouchableOpacity onPress={() => {this.setState({modalVisible: false})}}>
-                    <Text>X</Text>
+                    <Text style={textColor}>X</Text>
                     </TouchableOpacity>
-                    <View style={styles.container}>
-                        <Text style={styles.headerTextStyle}>Enter Code</Text>
+                    <View style={container}>
+                        <Text style={[headerTextStyle, textColor]}>Enter Code</Text>
                         <TextInput
-                        style={styles.modalTextInput}
+                        style={modalTextInput}
                         onChangeText={(text) => this.setState({text})}
                         value={this.state.text}
                         autoCapitalize={'characters'}
@@ -116,6 +125,9 @@ class EventDetails extends Component {
   }
 
     renderComponent(item) {
+        const {
+            textColor
+        } = styles
         if(this.props.userList !== undefined && this.props.userList[item] !== undefined){
             const {
                 firstName,
@@ -123,7 +135,7 @@ class EventDetails extends Component {
             } = this.props.userList[item]
             return(
                 <View style={{flex: 1}}>
-                    <Text style={{fontSize: 16, alignSelf:'center'}}>{firstName} {lastName}</Text>
+                    <Text style={[{fontSize: 16, alignSelf:'center'}, textColor]}>{firstName} {lastName}</Text>
                 </View>
             )
         }
@@ -193,8 +205,7 @@ class EventDetails extends Component {
     }
 
     renderAttendance() {
-        
-        const {
+            const {
             privilege,
             eventList,
             eventID
@@ -204,22 +215,23 @@ class EventDetails extends Component {
             lineOnTop,
             attendance,
             attendanceContainer,
-            icon
+            icon,
+            textColor
         } = styles
 
-        var attendants = Object.keys(eventList[eventID].attendance)
+        if(privilege !== undefined && privilege.board === true && eventList !== undefined && eventList[eventID] !== undefined && eventList[eventID].attendance !== undefined) {
+            var attendants = Object.keys(eventList[eventID].attendance)
 
-        if(privilege !== undefined && privilege.board === true){
-            return(
+            return (
                 <View style={[{flex: 1, flexDirection: 'column'}, lineOnTop]}>
                     <View style={attendanceContainer}>
                         <View style={{flex:.5}}/>
-                        <Text style={attendance}>Attendance</Text>
+                        <Text style={[attendance, textColor]}>Attendance</Text>
                         <Ionicons 
-                        style={[icon, {alignSelf: 'center'}]} 
+                        style={[icon, {alignSelf: 'center'}, textColor]} 
                         name="md-mail" 
                         size={35} 
-                        color='#000000'
+                        color = 'e0e6ed'
                         onPress={() => this.sendListToMail(attendants)}/>
                     </View>
                     <FlatList
@@ -239,8 +251,8 @@ class EventDetails extends Component {
         this.setState({modalVisible: true})
     }
     deleteButton(){
-        this.props.deleteEvents(this.props.eventID);
-        this.props.goToEvents();
+        this.props.deleteEvents(this.props.eventID)
+        Actions.pop()
     }
     checkinButton(ID, points){
         this.props.checkIn(ID, points);
@@ -265,7 +277,7 @@ class EventDetails extends Component {
             )
             }else
             return(
-            <View style={{paddingTop:20, paddingHorizontal:10}}>
+            <View>
                 <Button 
                     title = "CHECK IN"
                     onPress={() => {
@@ -297,27 +309,26 @@ class EventDetails extends Component {
                 icon_container,
                 icon,
                 text,
+                textColor,
                 final
             } = styles
 
             var iconSize = 25
             return (
                 <View style={page}>
-                    <View style={tabBar}>
-                        <Text style={tabBarText}>{name}</Text>
-                    </View>
+                    <NavBar title={name} back onBack={() => Actions.pop()} />
                     <View style={container}>
                         <View style={icon_container}>
-                            <Ionicons style={icon} name="md-time" size={iconSize} color='#000000'/>
-                            <Text style={text}>{this.convertNumToDate(date)}  {time}</Text>
+                            <Ionicons style={[icon, textColor]} name="md-time" size={iconSize} color='#000000'/>
+                            <Text style={[text, textColor]}>{this.convertNumToDate(date)}  {time}</Text>
                         </View>
                         <View style={icon_container}>
-                            <Ionicons style={icon} name="md-pin" size={iconSize} color='#000000'/>
-                            <Text style={text}>{location}</Text>
+                            <Ionicons style={[icon, textColor]} name="md-pin" size={iconSize} color='#000000'/>
+                            <Text style={[text, textColor]}>{location}</Text>
                         </View>
                         <View style={[icon_container, {flex: .7}]}>
-                            <Ionicons style={icon} name="md-list" size={iconSize} color='#000000'/>
-                            <Text style={text}>{description}</Text>
+                            <Ionicons style={[icon, textColor]} name="md-list" size={iconSize} color='#000000'/>
+                            <Text style={[text, textColor]}>{description}</Text>
                         </View>
                         <View style = {[icon_container, final]}>
                             {this.renderAttendance()}
@@ -325,10 +336,6 @@ class EventDetails extends Component {
                     </View>
                     {this.renderButtons()}
                     {this.renderCodeBox()}
-                    <Button 
-                        title = "CANCEL"
-                        onPress={() => Actions.pop()}
-                    />
                 </View>
             )
         }
@@ -352,19 +359,20 @@ const styles = StyleSheet.create({
         height: 80,
         textAlign: 'center',
         width: dimension.width*.6,
-        backgroundColor: '#FECB0022',
-        borderColor: '#FECB00',
+        backgroundColor: '#e0e6ed22',
+        borderColor: '#e0e6ed',
         borderRadius: 16,
         borderWidth: 3,
         borderStyle: 'solid',
         fontWeight: 'bold',
-        fontSize: 60
+        fontSize: 60,
+        color: '#E0E6ED'
     },
     modalContent: {
         height: dimension.height*.5,
         width: dimension.width*.8,
         padding: 12,
-        backgroundColor: '#fff',
+        backgroundColor: '#21252b',
         borderRadius: 12,
     },
     modalBackground: {
@@ -377,6 +385,9 @@ const styles = StyleSheet.create({
     },
     final: {
         flex: 1
+    },
+    textColor: {
+        color: '#e0e6ed'
     },
     icon_container: {
         flex: .2,
@@ -399,7 +410,7 @@ const styles = StyleSheet.create({
         fontSize: 20
     },
     lineOnTop: {
-        borderTopColor: 'black',
+        borderTopColor: '#e0e6ed',
         borderTopWidth: 1,
     },
     codeText: {
@@ -411,7 +422,7 @@ const styles = StyleSheet.create({
     }, 
     page: {
         flex: 1,
-        backgroundColor: '#ebebf1',
+        backgroundColor: '#0c0b0b',
     },
     tabBar: {
         height: dimension.height * .1,
@@ -440,9 +451,9 @@ const styles = StyleSheet.create({
     }
 });
 
-const mapStateToProps = ({ events, auth, members }) => {
+const mapStateToProps = ({ events, user, members }) => {
   const { type, name, description, date, time, location, points, eventID, error, code, eventList } = events;
-  const { privilege } = auth;
+  const { privilege } = user;
   const { userList } = members
 
   return { type, name, description, date, time, location, points, eventID, error, privilege, code, eventList, userList};

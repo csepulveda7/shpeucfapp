@@ -1,3 +1,4 @@
+import firebase from 'firebase';
 import React, { Component } from 'react';
 import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
@@ -6,10 +7,10 @@ import {
   loadUser,
   fetchEvents,
   goToViewEvent
-} from '../actions';
+} from '../ducks';
 import _ from 'lodash';
 import * as Progress from 'react-native-progress';
-import { Button, Spinner } from '../components/general'
+import { Button, Spinner, NavBar } from '../components/general'
 import {
   FlatList,
   Text,
@@ -27,8 +28,142 @@ class PointsBreakDown extends Component {
  
     componentWillMount() {
         {this.setState({show: ""})}
-        this.props.fetchEvents()
-        this.props.fetchMembersPoints()
+        // this.props.fetchEvents()
+        // this.props.fetchMembersPoints()
+    }
+
+    render() {
+  
+        const {
+            page,
+            containerStyle,
+            contentContainerStyle,
+            title,
+            points,
+            topLevelText,
+            textColor
+        } = styles
+
+               return (
+                <View style ={page}>
+                    <NavBar title="Points" back onBack={() => Actions.replace('profile')} />
+                    {this.renderContent()}
+                </View>
+            )
+    }
+
+    renderContent(){
+
+        const { currentUser } = firebase.auth();
+        const {
+            containerStyle,
+            contentContainerStyle,
+            title,
+            points,
+            topLevelText,
+            textColor
+        } = styles
+
+        const {
+            membersPoints
+        } = this.props
+            
+        var breakdown
+
+        if (membersPoints !== undefined && membersPoints !== null &&
+            membersPoints[currentUser.uid] !== undefined && membersPoints[currentUser.uid] !== null
+            && membersPoints[currentUser.uid].breakdown !== undefined && membersPoints[currentUser.uid].breakdown !== null 
+            && membersPoints[currentUser.uid].breakdown.length !== 0) {
+
+            breakdown = Object.entries(membersPoints[currentUser.uid].breakdown)
+            return (
+                <View style={{flex: 1}}>
+                    <View style={[contentContainerStyle,containerStyle]}>
+                        <Text style={[title, topLevelText, textColor]}>Total Points</Text>
+                        <Text style={[points, topLevelText, textColor]}>{this.props.membersPoints[currentUser.uid].points}</Text>
+                    </View>
+                    <FlatList
+                        data={breakdown}
+                        extraData={this.state}
+                        keyExtractor={this._keyExtractor}
+                        renderItem={({item, separators}) => (
+                        this.renderComponent(item)
+                        )}
+                    />
+                </View>
+            )
+        }
+        else return (
+            <Text style={[textColor, {flex: 1}]}>You have no Points! Go out there and get some points!</Text>
+        )
+    }
+
+   _keyExtractor = (item, index) => item;
+
+   renderComponent(section) {
+    const {
+    containerStyle,
+    contentContainerStyle,
+    title,
+    points,
+    midLevelText,
+    textColor
+    } = styles;   
+    // alert(item[0])
+    var count = this.countPoints(section)
+
+    var arr = section;
+
+    if(section === null || section.length < 1 || section[1] === null)
+        arr = []
+    // alert(Object.values(section[1])[1].name)
+    return (
+        <View>
+        <TouchableOpacity onPress = {() => this.toggleShow(section[0])}>
+            <View style={contentContainerStyle}>
+                <View style={containerStyle}>
+                    <Text style={[title,midLevelText, textColor]}>{section[0]}</Text>
+                    <Text style={[points,midLevelText, textColor]}>{count}</Text>
+                </View>
+            </View>
+            </TouchableOpacity>
+            <FlatList
+                visible={false}
+                data={Object.values(arr[1])}
+                extraData={this.state}
+                keyExtractor={this._keyExtractor}
+                renderItem={({item, separators}) => (
+                this.renderInnerComponent(item,section[0])
+                )}/>
+        </View>
+    )
+    }
+
+   renderInnerComponent(item, section){
+    const {
+        innerContainerStyle,
+        innerContentContainerStyle,
+        title,
+        points,
+        botLevelText,
+        textColor
+    } = styles;
+
+    if (JSON.stringify(this.state.show) === JSON.stringify(section)) {
+        return(
+        <TouchableOpacity>
+        <View style={innerContentContainerStyle}>
+            <View style={innerContainerStyle}>
+                <Text style={[title,botLevelText,textColor]}>{item.name}</Text>
+                <Text style={[points,botLevelText,textColor]}>{item.points}</Text>
+                <Text style={[points, botLevelText, textColor]}>{item.date}</Text>
+            </View>
+        </View>
+        </TouchableOpacity>
+        )
+    }
+    else
+        return null;
     }
 
     countPoints(item) {
@@ -47,120 +182,27 @@ class PointsBreakDown extends Component {
             show: text
         });
     }
-    
-    renderInnerComponent(item, section){
-        const {
-            innerContainerStyle,
-            innerContentContainerStyle,
-            title,
-            points,
-            botLevelText
-        } = styles;
 
-        if (JSON.stringify(this.state.show) === JSON.stringify(section)) {
-            return(
-            <TouchableOpacity>
-            <View style={innerContentContainerStyle}>
-                <View style={innerContainerStyle}>
-                    <Text style={[title,botLevelText]}>{item.name}</Text>
-                    <Text style={[points,botLevelText]}>{item.points}</Text>
-                </View>
-            </View>
-            </TouchableOpacity>
-            )
-        }
-        else
-            return null;
-    }
-
-  renderComponent(section) {
-    const {
-      containerStyle,
-      contentContainerStyle,
-      title,
-      points,
-      midLevelText
-    } = styles;   
-    // alert(item[0])
-    var count = this.countPoints(section)
-    // alert(Object.values(section[1])[1].name)
-    return (
-        <View>
-        <TouchableOpacity onPress = {() => this.toggleShow(section[0])}>
-            <View style={contentContainerStyle}>
-                <View style={containerStyle}>
-                    <Text style={[title,midLevelText]}>{section[0]}</Text>
-                    <Text style={[points,midLevelText]}>{count}</Text>
-                </View>
-            </View>
-            </TouchableOpacity>
-            <FlatList
-                visible={false}
-                data={Object.values(section[1])}
-                extraData={this.state}
-                keyExtractor={this._keyExtractor}
-                renderItem={({item, separators}) => (
-                this.renderInnerComponent(item,section[0])
-                )}/>
-        </View>
-      )
-  }
-
-   _keyExtractor = (item, index) => item;
-
-  render() {
-  
-    // alert(this.props.loading)
-    if(this.props.loading){
-      return <Spinner/>
-    }
-    else{
-        const {
-            page,
-            containerStyle,
-            contentContainerStyle,
-            title,
-            points,
-            topLevelText
-        } = styles;
-        const breakdown = Object.entries(this.props.membersPoints[this.props.id].breakdown)
-        return (
-            <View style ={page}>
-                <View style={[contentContainerStyle,containerStyle]}>
-                    <Text style={[title, topLevelText]}>Total Points</Text>
-                    <Text style={[points, topLevelText]}>{this.props.membersPoints[this.props.id].points}</Text>
-                </View>
-                <FlatList
-                    data={breakdown}
-                    extraData={this.state}
-                    keyExtractor={this._keyExtractor}
-                    renderItem={({item, separators}) => (
-                    this.renderComponent(item)
-                    )}
-                />
-                <Button
-                title={"Return"}
-                onPress={()=> Actions.pop()}/>
-            </View>
-        )
-    }
-  }
 }
 
 const styles = StyleSheet.create({
     page: {
-        marginBottom: 10,
+        paddingBottom: 10,
         flexDirection: 'column',
-        flex: 1
+        flex: 1,
+        backgroundColor: '#0c0b0b'
     },
     containerStyle: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
         paddingVertical: 30,
         paddingHorizontal: 15,
     },
+    textColor: {
+        color: '#e0e6ed'
+    },
     topLevelText: {
-        fontSize: 18
+        fontSize: 20,
+        fontWeight: 'bold'
     },
     midLevelText: {
         fontSize: 16
@@ -169,10 +211,11 @@ const styles = StyleSheet.create({
         fontSize: 12
     },
     contentContainerStyle: {
-        margin: 1,
+        marginTop: 1,
+        backgroundColor: '#2C3239'
     },
     title: {
-        flex: 1
+        flex: .5
     },
     points: {
         flex: .15
@@ -190,9 +233,9 @@ const styles = StyleSheet.create({
     },
 });
 
-const mapStateToProps = ({ auth, members, events, general }) => {
+const mapStateToProps = ({ user, members, events, general }) => {
   const { membersPoints } = members;
-  const { id } = auth
+  const { id } = user
   const { eventList } = events
   const { loading } = general
 

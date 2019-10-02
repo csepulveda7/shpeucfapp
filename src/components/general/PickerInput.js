@@ -36,7 +36,8 @@ class PickerInput extends Component {
         style: PropTypes.shape({}),
         pickerItemStyle: PropTypes.shape({}),
         dropDownArrowStyle: PropTypes.shape({}),
-        iconSize: PropTypes.number
+        iconSize: PropTypes.number,
+        iconColor: PropTypes.string
     }
 
     clickAction(item) {
@@ -51,14 +52,10 @@ class PickerInput extends Component {
             itemTextStyle
         } = styles
 
-        const dataArr = Object.keys(this.props.data)
-
-        last = (item[0] == dataArr[dataArr.length - 1]) ? 
-            {borderBottomColor: '#0000'} : {}
         return(
             <TouchableOpacity
             onPress={() => this.clickAction(item[1])}>
-                <View style={[itemStyle, this.props.pickerItemStyle,last]}>
+                <View style={[itemStyle, this.props.pickerItemStyle]}>
                     <Text style={itemTextStyle}>{item[1]}</Text>
                 </View>
             </TouchableOpacity>
@@ -88,7 +85,8 @@ class PickerInput extends Component {
             style,
             inputBoxStyle,
             dropDownArrowStyle,
-            iconSize
+            iconSize,
+            iconColor
         } = this.props
         if(value !== undefined && value !== null && this.state.text !== String(value)){
             this.setState({text: String(value)})
@@ -107,7 +105,9 @@ class PickerInput extends Component {
                     onPress={() => this.setState({modalVisible: true})}
                     style={[iconStyle, dropDownArrowStyle]}
                     name={'ios-arrow-dropdown'}
-                    size={iconSize}/>
+                    size={iconSize}
+                    color={iconColor}
+                    />
                 </View>
                 <Modal
                 transparent={true}
@@ -144,7 +144,8 @@ class PickerInput extends Component {
 PickerInput.defaultProps = {
     title: 'Give me a title!',
     placeholder: 'Choose an Option',
-    iconSize: 50
+    iconSize: 50,
+    iconColor: 'white'
 }
 
 const styles = {

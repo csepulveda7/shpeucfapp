@@ -19,14 +19,17 @@ class DatePicker extends Component {
 
     constructor(props) {
         super(props);
+        var date = []
+        if(this.props.value !== undefined && this.props.value !== null)
+            var date = this.props.value.split("-")
         this.state = {
-            month: "",
-            day: "",
-            year: "",
+            month: (date.length === 3) ? date[1]: "",
+            day: (date.length === 3) ? date[2]: "",
+            year: (date.length === 3) ? date[0]: "",
             monthArr: Array.from({length: 12}, (v, k) => k+1),
             dayArr: Array.from({length: 31}, (v, k) => k+1),
             yearArr: Array.from({length: 101}, (v, k) => (new Date().getFullYear()) - k),
-            focused: false
+            focused: (date.length === 3) ? true : false
         }
     }
     static propTypes = {
@@ -35,33 +38,38 @@ class DatePicker extends Component {
         onSelect: PropTypes.func.isRequired
     }
 
-
+    prepend0(item){
+        if(item < 10){
+            return "0" + item;
+        }
+        return item
+    }
 
     leapYear(year){
         return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
     }
 
 
-    onSelect() {
+    update(item) {
         const {
             month,
             day,
             year
-        } = this.state
-        
+        } = item
         this.props.onSelect(`${year}-${month}-${day}`)
     }
 
     clickActionMonth(item) {
+        item = this.prepend0(item)
         const {
             day,
             month,
             year
         } = this.state
-        
+
         this.setState({month: item})
         const Month30 = [false,false,false,true,false,true,false,false,true,false,true,false]
-        
+
         if(item === 2){
             if(year != 0 && this.leapYear(year)){
                 this.setState({dayArr: Array.from({length: 29}, (v, k) => k+1)})
@@ -79,26 +87,26 @@ class DatePicker extends Component {
         else if(item !== 2){
             this.setState({dayArr: Array.from({length: 31}, (v, k) => k+1)})
         }
-        if(month !== "" && day !== "" && year !== "")
-            this.onSelect()
-            
+        if(day !== "" && year !== "")
+            this.update({day: day, month: item, year: year})
+
     }
     clickActionDay(item) {
+        item = this.prepend0(item)
         const {
             month,
-            day,
             year
         } = this.state
 
         this.setState({day: item})
-        if(month !== "" && day !== "" && year !== "")
-            this.onSelect()
+
+        if(month !== "" && year !== "")
+            this.update({day: item, month: month, year: year})
     }
     clickActionYear(item) {
         const {
             month,
             day,
-            year
         } = this.state
         this.setState({year: item})
 
@@ -107,8 +115,8 @@ class DatePicker extends Component {
             if(day > 29) this.setState({day: "29"})
         }
 
-        if(month !== "" && day !== "" && year !== "")
-            this.onSelect()
+        if(month !== "" && day !== "")
+            this.update({day: day, month: month, year: item})
     }
 
    _keyExtractor = (item, index) => index;
@@ -157,6 +165,7 @@ class DatePicker extends Component {
                         inputBoxStyle={inputBoxStyle}
                         dropDownArrowStyle={dropDownArrowStyle}
                         iconSize={iconSize}
+                        iconColor='black'
                         value={month}
                         onSelect={(text) => this.clickActionMonth(text)}
                         placeholder={"MM"}
@@ -170,6 +179,7 @@ class DatePicker extends Component {
                         inputBoxStyle={inputBoxStyle}
                         dropDownArrowStyle={dropDownArrowStyle}
                         iconSize={iconSize}
+                        iconColor='black'
                         value={day}
                         onSelect={(text) => this.clickActionDay(text)}
                         placeholder={"DD"}
@@ -181,7 +191,8 @@ class DatePicker extends Component {
                         style={style}
                         title={"Enter a Year"}
                         inputBoxStyle={inputBoxStyle}
-                        iconSize={iconSize}  
+                        iconSize={iconSize}
+                        iconColor='black'
                         dropDownArrowStyle={dropDownArrowStyle}
                         value={year}
                         onSelect={(text) => this.clickActionYear(text)}

@@ -11,8 +11,7 @@ import {
   Dimensions } from 'react-native';
 import { Button } from '../components/general'
 import { ListItem } from 'react-native-elements';
-
-
+import { NavBar } from '../components/general';
 
 const dimension = Dimensions.get('window');
 
@@ -20,12 +19,19 @@ const menuItems = [
     {
       title: 'Election',
       icon: 'check',
-      screen: 'ElectionBackEnd'
+      screen: 'ElectionBackEnd',
+      privilege: 'president'
     },
+    // {
+    //   title: 'Statistics',
+    //   icon: 'check',
+    //   screen: 'Statistics'
+    // },
     {
-      title: 'Statistics',
-      icon: 'check',
-      screen: 'Statistics'
+      title: 'Committees',
+      icon: 'assignment-ind',
+      screen: 'CommitteesBackEnd',
+      privilege: 'eboard'
     },
     {
       title: 'Committee',
@@ -39,47 +45,47 @@ class BackEnd extends Component {
     super(props);
   }
 
+  render() {
+    const {
+        tabBar,
+        tabBarText,
+        page
+    } = styles;
+    return (
+      <View style={page}>
+        <NavBar title="Back End" back onBack={() => Actions.pop()} />
+        <FlatList
+          keyExtractor = {this.keyExtractor}
+          extraData={this.state}
+          data = {menuItems}
+          renderItem={this.renderItem}
+        />
+      </View>
+    );
+  };
+
   keyExtractor = (item, index) => index
 
   renderItem  = ({item}) => {
-      if (!('privilege' in item) || this.props.privilege[item.privilege] === true ) {
+
+    const {
+      privilege
+    } = this.props
+      if ( privilege !== null && privilege !== undefined && item !== null && item !== undefined
+        &&  privilege[item.privilege] !== undefined && (!('privilege' in item) || privilege[item.privilege] === true )) {
         return(
         <ListItem
+          containerStyle={{ backgroundColor: '#2C3239', borderBottomColor: 'white', borderBottomWidth: 1}}
+          removeClippedSubviews={false}
           title={item.title}
-          leftIcon={{name: item.icon}}
+          chevron
+          titleStyle={{ color: 'white'}}
+          leftIcon={{name: item.icon , color: 'white' }}
           onPress={() => Actions[item.screen]()}
         />
       )
     }
   }
-
-  render() {
-    const {
-        tabBar,
-        tabBarText,
-        buttonContainerStyling,
-        page
-    } = styles;
-    return (
-      <View style={page}>
-        <View style={tabBar}>
-            <Text style={tabBarText}>Back End</Text>
-        </View>
-        <FlatList
-          keyExtractor = {this.keyExtractor}
-          data = {menuItems}
-          renderItem={this.renderItem}
-        />
-        <View style={buttonContainerStyling}>
-            <Button
-            onPress={() => Actions.popTo('more')}
-            title={"BACK"}
-            >
-            </Button>
-        </View>
-      </View>
-    );
-  };
 }
 
 const styles = StyleSheet.create({
@@ -96,18 +102,16 @@ const styles = StyleSheet.create({
     margin: 20,
     alignSelf: "center"
   },
-  buttonContainerStyling: {
-      margin: 10
-  },
   page: {
     flex: 1,
-    backgroundColor: '#ebebf1',
+    backgroundColor: '#2C3239',
   }
 });
 
-const mapStateToProps = ({  }) => {
+const mapStateToProps = ({ user }) => {
+  const { privilege } = user
 
-  return {  };
+  return { privilege };
 };
 
 const mapDispatchToProps = {

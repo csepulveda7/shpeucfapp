@@ -1,6 +1,7 @@
 import firebase from 'firebase';
 import { Actions } from 'react-native-router-flux';
 import { Alert } from 'react-native';
+import AppInfo from '../../app.json'
 
 import {
   FIRST_NAME_CHANGED,
@@ -33,9 +34,12 @@ import {
   GO_TO_REGISTRATION,
   GO_TO_EDIT_PROFILE_FORM,
   QUOTE_CHANGED,
+  CONTINENT_CHANGED,
   NATIONALITY_CHANGED,
-  DATE_BIRTH_CHANGED,
-  PAGE_LOAD } from './types';
+  GENDER_CHANGED,
+  BIRTH_DATE_CHANGED,
+  PAGE_LOAD,
+ } from './types';
 
 export const firstNameChanged = (text) => {
   return {
@@ -80,15 +84,27 @@ export const pointsChanged = (text) => {
     payload: text
   };
 };
-export const dateBirthChanged = (text) => {
+export const birthDateChanged = (text) => {
   return {
-    type: DATE_BIRTH_CHANGED,
+    type: BIRTH_DATE_CHANGED,
+    payload: text
+  };
+}
+export const continentChanged = (text) => {
+  return {
+    type: CONTINENT_CHANGED,
     payload: text
   };
 }
 export const nationalityChanged = (text) => {
   return {
     type: NATIONALITY_CHANGED,
+    payload: text
+  };
+}
+export const genderChanged = (text) => {
+  return {
+    type: GENDER_CHANGED,
     payload: text
   };
 }
@@ -152,12 +168,12 @@ const showFirebaseError = (dispatch, error) => {
 };
 
 // Registration Actions
-export const createUser = ({ firstName, lastName, email, college, major, points, picture, password, quote, nationality, birthday }) => {
+export const createUser = ( firstName, lastName, email, college, major, points, picture, password, quote, continent, nationality, gender, birthday) => {
   return (dispatch) => {
     dispatch({ type: CREATE_USER });
 
     firebase.auth().createUserWithEmailAndPassword(email, password)
-      .then((user) => createUserSuccess(dispatch, firstName, lastName, email, college, major, points, picture, quote, nationality, birthday))
+      .then((user) => createUserSuccess(dispatch, firstName, lastName, email, college, major, points, picture, quote, continent, nationality, gender, birthday))
       .catch((error) => createUserFail(dispatch, error))
   };
 };
@@ -185,7 +201,7 @@ const createUserFail = (dispatch, error) => {
   });
 };
 
-const createUserSuccess = (dispatch, firstName, lastName, email, college, major, points, picture, quote, nationality, birthday) => {
+const createUserSuccess = (dispatch, firstName, lastName, email, college, major, points, picture, quote, continent, nationality, gender, birthday) => {
   const { currentUser } = firebase.auth();
 
   firebase.database().ref(`/users/${currentUser.uid}/`).set({
@@ -197,14 +213,20 @@ const createUserSuccess = (dispatch, firstName, lastName, email, college, major,
       points: points,
       picture: picture,
       quote: quote,
+      continent: continent,
       nationality: nationality,
+      gender: gender,
       birthday: birthday,
-      id: currentUser.uid
+      id: currentUser.uid,
+      paidMember: false,
+      voted: false,
+      applied: false
     })
     .then(() => firebase.database().ref(`/points/${currentUser.uid}/`).set({
       firstName: firstName,
       lastName: lastName,
       points: points,
+      id: currentUser.uid
     }))
     .then(() => firebase.database().ref(`/privileges/${currentUser.uid}/`).set({
       firstName: firstName,
@@ -212,23 +234,26 @@ const createUserSuccess = (dispatch, firstName, lastName, email, college, major,
       user: true,
       board: false,
       eboard: false,
-      president: false
+      president: false,
+      id: currentUser.uid,
+      paidMember: false
     }))
-    .then(() => currentUser.sendEmailVerification())
+    .then(() => {
+      currentUser.sendEmailVerification()
+      alert(`We sent a verification to: ${email}. Please open your email and verify your account`)
+    })
     .then(() => firebase.auth().signOut())
-    .then(() => Alert.alert('Account Created',
-      `Please verify your email ${emailU} then log in using your credentials.`));
-
+    
   dispatch({
     type: CREATE_USER_SUCCESS,
-  });
+  }); 
 };
 
-export const editUser = ( firstName, lastName, email, college, major, points, quote, nationality, birthday ) => {
-  return (dispatch) => {
-  const {
+export const editUser = ( firstName, lastName, email, college, major, quote, continent, nationality, gender, birthday) => {
+
+    const {
     currentUser
-  } = firebase.auth();
+    } = firebase.auth();
 
   firebase.database().ref(`/users/${currentUser.uid}/`).update({
       firstName: firstName,
@@ -236,30 +261,22 @@ export const editUser = ( firstName, lastName, email, college, major, points, qu
       email: email,
       college: college,
       major: major,
-      points: points,
       quote: quote,
+      continent: continent,
       nationality: nationality,
-      birthday: birthday
+      gender: gender,
+      birthday: birthday,
     })
     .then(() => firebase.database().ref(`/points/${currentUser.uid}/`).update({
       firstName: firstName,
       lastName: lastName,
-      points: points,
     }))
     .then(() => firebase.database().ref(`/privileges/${currentUser.uid}/`).update({
       firstName: firstName,
       lastName: lastName,
-      user: true,
-      board: false,
-      eboard: false,
-      president: false
     }))
-    .then(() => Alert.alert('Account Updated'));
-
-  dispatch({
-    type: EDIT_USER,
-  });
-}
+    .then(() => Alert.alert('Account Updated'))
+    
 };
 
 export const getPrivilege = () => {
@@ -273,17 +290,10 @@ export const getPrivilege = () => {
             type: GET_PRIVILEGE,
             payload: snapshot.val(),
           })
-          dispatch({
-            type: PAGE_LOAD,
-            payload: false
-          });
       })
     };
   };
 }
-
-
-
 
 
 // Login Actions
@@ -308,15 +318,31 @@ export const resetPassword = ({ email }) => {
 export const loginUser = ({ email, password }) => {
   return (dispatch) => {
     dispatch({ type: LOGIN_USER });
-
     firebase.auth().signInWithEmailAndPassword(email, password)
-      .then(user => loginUserSuccess(dispatch, user))
-      .catch(error => loginUserFail(dispatch, error));
+    .then(user => {
+          if (!firebase.auth().currentUser.emailVerified) {
+            alert('Account must be verified!\nPlease check your email for verification email')
+            return Promise.reject({
+              error: 'Email not Verified'
+            })
+          }
+       })
+    .then(user => {
+      firebase.database().ref('/version').once('value', snapshot => {
+        if (snapshot.val() !== AppInfo.version) {
+          alert('App must be up to Date!\nPlease update the app.')
+          return Promise.reject({
+            error: 'App not up to date'
+          })
+        }
+      })
+    })
+    .then(user => loginUserSuccess(dispatch, user))
+    .catch(error => loginUserFail(dispatch, error));
   };
 };
 
 const loginUserSuccess = (dispatch, user) => {
-  loadUser();
   dispatch({
     type: ENTER_APP,
     payload: user
@@ -344,7 +370,7 @@ export const loadUser = (userID) => {
 
 export const loginUserFail = (dispatch, error) => {
   let errorMessage;
-
+  console.error(error.code)
   switch (error.code) {
     case 'auth/user-not-found':
       errorMessage = 'There is no user record corresponding to this identifier';
@@ -413,4 +439,4 @@ export const goToEditProfileForm = () => {
     });
     Actions.EditProfileForm();
   }
-};
+}
