@@ -11,7 +11,7 @@ import {
     FlatList,
     Linking
 } from 'react-native';
-import {Button} from '../general'
+import { Button, NavBar } from '../general'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
     goToCreateEvent,
@@ -27,7 +27,7 @@ import {
     convertNumToDate,
     fetchAllUsers,
     emailListUsers,
-} from '../../actions'
+} from '../../ducks'
 import { Actions } from 'react-native-router-flux';
 
 const dimension = Dimensions.get('screen');
@@ -316,9 +316,7 @@ class EventDetails extends Component {
             var iconSize = 25
             return (
                 <View style={page}>
-                    <View style={tabBar}>
-                        <Text style={tabBarText}>{name}</Text>
-                    </View>
+                    <NavBar title={name} back onBack={() => Actions.pop()} />
                     <View style={container}>
                         <View style={icon_container}>
                             <Ionicons style={[icon, textColor]} name="md-time" size={iconSize} color='#000000'/>
@@ -338,10 +336,6 @@ class EventDetails extends Component {
                     </View>
                     {this.renderButtons()}
                     {this.renderCodeBox()}
-                    <Button 
-                        title = "CANCEL"
-                        onPress={() => Actions.pop()}
-                    />
                 </View>
             )
         }
@@ -371,7 +365,8 @@ const styles = StyleSheet.create({
         borderWidth: 3,
         borderStyle: 'solid',
         fontWeight: 'bold',
-        fontSize: 60
+        fontSize: 60,
+        color: '#E0E6ED'
     },
     modalContent: {
         height: dimension.height*.5,
@@ -456,9 +451,9 @@ const styles = StyleSheet.create({
     }
 });
 
-const mapStateToProps = ({ events, auth, members }) => {
+const mapStateToProps = ({ events, user, members }) => {
   const { type, name, description, date, time, location, points, eventID, error, code, eventList } = events;
-  const { privilege } = auth;
+  const { privilege } = user;
   const { userList } = members
 
   return { type, name, description, date, time, location, points, eventID, error, privilege, code, eventList, userList};

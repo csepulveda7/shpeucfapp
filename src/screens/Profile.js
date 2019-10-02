@@ -2,20 +2,63 @@ import React, { Component } from 'react';
 import { Actions } from 'react-native-router-flux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { connect } from 'react-redux';
-import {Button, Spinner} from '../components/general'
-import { loadUser, logoutUser, goToEditProfileForm, pageLoad} from '../actions';
-import {
-  Text,
-  View, StyleSheet,
-  Image,
-  ScrollView,
-  TouchableOpacity,
- 	Dimensions
-	} from 'react-native';
+import { Button, Spinner, NavBar } from '../components/general'
+import { loadUser, logoutUser, goToEditProfileForm, pageLoad} from '../ducks';
+import { Text, View, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { Avatar, Divider } from 'react-native-elements';
 
 const dimension = Dimensions.get('window');
 class Profile extends Component {
+
+  render() {
+    return (
+          this.renderContent()
+      )
+    }
+
+  renderContent(){
+    const { firstName, lastName, email, major, points, quote } = this.props;
+
+    const {
+      bioContainer,
+      taglineContainer,
+      fieldContainerStyle,
+      itemLabelText,
+      itemValueText,
+      textColor
+      } = styles
+
+    return (
+      <View style={{flex: 1}}>
+        <NavBar title="Profile" />
+        {this.renderPicture()}
+        
+          <View style={bioContainer}>
+            <View style={taglineContainer}>
+                <Text style={[itemLabelText, textColor, {flex: 1}]}>{firstName + ' ' + lastName}</Text>
+            </View>
+            <View style={fieldContainerStyle}>
+              <Text style={[itemLabelText, textColor]}>Email:</Text>
+              <Text style={[itemValueText, textColor]}>{email}</Text>
+            </View>
+            <View style={fieldContainerStyle}>
+              <Text style={[itemLabelText, textColor]}>Major:</Text>
+              <Text style={[itemValueText, textColor]}>{major}</Text>
+            </View>
+            <TouchableOpacity style = {fieldContainerStyle} onPress={() => {
+              Actions.pointsBreakDown()}}
+            >
+              <Text style={[itemLabelText, textColor]}>Points:</Text>
+              <Text style={[itemValueText, textColor]}>{points}</Text>
+            </TouchableOpacity>
+          </View>
+          {this.renderSocialMedia()}
+          {this.renderButtons()}
+      </View>
+  )
+
+  }
+
   renderPicture() {
     const {
       headerInfoContainer,
@@ -30,7 +73,7 @@ class Profile extends Component {
     return (
       <View style={headerInfoContainer}>
         <Avatar
-          large
+          size="xlarge"
           rounded
           source={{uri: picture}}
           title={`${firstName[0]}${lastName[0]}`}
@@ -71,65 +114,26 @@ class Profile extends Component {
 			<View style={{flexDirection: 'row'}}>
         <View style= {LogoContainer}>
           <TouchableOpacity
-            onPress={() => Actions.PostShow({ title: 'Linkedin', uri: 'https://www.linkedin.com/'})}>
+            onPress={() => {
+              alert("Coming Soon")
+              // Actions.PostShow({ title: 'Linkedin', uri: 'https://www.linkedin.com/'})
+            }
+            }>
             <Ionicons name="logo-linkedin" size={40} color='#000000'/>
           </TouchableOpacity>
         </View>
         <View style={LogoContainer}>
           <TouchableOpacity
-            onPress={() => Actions.PostShow({ title: 'Github', uri: 'https://www.github.com/'})}>
+            onPress={() => {
+              alert("Coming Soon")
+            // Actions.PostShow({ title: 'Github', uri: 'https://www.github.com/'})
+            }
+          }>
             <Ionicons name="logo-github" size={40} color='#000000'/>
           </TouchableOpacity>
         </View>
       </View>
 			</View>
-    )
-  }
-
-  renderContent(){
-    const { firstName, lastName, email, major, points, quote } = this.props;
-
-    const {
-      bioContainer,
-      taglineContainer,
-      fieldContainerStyle,
-      itemLabelText,
-      itemValueText,
-      textColor
-      } = styles
-
-    return (
-      <View style={{flex: 1}}>
-        {this.renderPicture()}
-        <View style={bioContainer}>
-          <View style={taglineContainer}>
-              <Text style={[itemLabelText, textColor, {flex: 1}]}>{firstName + ' ' + lastName}</Text>
-          </View>
-          <View style={fieldContainerStyle}>
-            <Text style={[itemLabelText, textColor]}>Email:</Text>
-            <Text style={[itemValueText, textColor]}>{email}</Text>
-          </View>
-          <View style={fieldContainerStyle}>
-            <Text style={[itemLabelText, textColor]}>Major:</Text>
-            <Text style={[itemValueText, textColor]}>{major}</Text>
-          </View>
-          <TouchableOpacity style = {fieldContainerStyle} onPress={() => {
-            Actions.pointsBreakDown()}}
-          >
-            <Text style={[itemLabelText, textColor]}>Points:</Text>
-            <Text style={[itemValueText, textColor]}>{points}</Text>
-          </TouchableOpacity>
-        </View>
-        {this.renderSocialMedia()}
-        {this.renderButtons()}
-      </View>
-  )
-
-  }
-
-  render() {
-  return (
-        this.renderContent()
     )
   }
 }
@@ -195,7 +199,8 @@ const styles = StyleSheet.create({
 	},
 	bioContainer: {
     flex: 1,
-		backgroundColor: '#0c0b0b'
+    backgroundColor: '#2C3239',
+    paddingLeft: '5%'
 	},
 	socialmediatext: {
 		flex:1,
@@ -203,8 +208,8 @@ const styles = StyleSheet.create({
 	},
 });
 
-const mapStateToProps = ({ auth, general }) => {
-  const { firstName, lastName, email, major, points, picture, quote } = auth;
+const mapStateToProps = ({ user, general }) => {
+  const { firstName, lastName, email, major, points, picture, quote } = user;
   const { loading } = general;
 
   return { firstName, lastName, email, major, points, picture, quote, loading };

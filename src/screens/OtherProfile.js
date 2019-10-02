@@ -3,7 +3,7 @@ import { Actions } from 'react-native-router-flux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { connect } from 'react-redux';
 import {Button, Spinner} from '../components/general'
-import { goToEditOtherProfileForm } from '../actions';
+import { goToEditOtherProfileForm } from '../ducks';
 import {
   Text,
   View, StyleSheet,
@@ -18,6 +18,18 @@ const dimension = Dimensions.get('window');
 
 class OtherProfile extends Component {
 
+  render() {
+    // alert(this.props.loading)
+     if(this.props.loading){
+      return <Spinner>{this.renderContent}</Spinner>
+    }
+    else return (
+      <View>
+        {this.renderContent()}
+      </View>
+    )
+  }
+  
   renderContent(){
     const { firstName, lastName, email, major, points, picture, quote } = this.props;
 
@@ -116,42 +128,36 @@ class OtherProfile extends Component {
 
   }
 
+  renderEditButton(privilege){
+    if (privilege.board)
+      return (
+          <View>
+            <Button
+              title = "EDIT PROFILE"
+              onPress = {() => goToEditOtherProfileForm()}
+            />
+          </View>
+      )
+  }
+
   renderButtons() {
     const {
       privilege,
       goToEditOtherProfileForm,
       } = this.props;
 
-    const {goBack} = this.props.navigation;
-
-    if (privilege.board || privilege.eboard || privilege.president) {
     return (
       <View>
-        <View>
-          <Button
-            title = "EDIT PROFILE"
-            onPress = {() => goToEditOtherProfileForm()}
-          />
-        </View>
+      {this.renderEditButton(privilege)}
         <View>
           <Button
             title = "BACK TO LEADERBOARD"
-            onPress={() => goBack()}
+            onPress={() => Actions.popTo("Leaderboard")}
           />
         </View>
       </View>
     )
-    }
-    else {
-    return (
-      <View>
-        <Button
-          title = "BACK TO LEADERBOARD"
-          onPress={() => goBack()}
-        />
-      </View>
-    )
-    }
+
   }
 
   renderSocialMedia(){
@@ -169,18 +175,6 @@ class OtherProfile extends Component {
             <Ionicons name="logo-github" size={40} color='#fff'/>
           </TouchableOpacity>
         </View>
-      </View>
-    )
-  }
-
-  render() {
-    // alert(this.props.loading)
-     if(this.props.loading){
-      return <Spinner>{this.renderContent}</Spinner>
-    }
-    else return (
-      <View>
-        {this.renderContent()}
       </View>
     )
   }
@@ -261,10 +255,10 @@ const styles = StyleSheet.create({
   },
 });
 
-const mapStateToProps = ({ members, general, auth }) => {
+const mapStateToProps = ({ members, general, user }) => {
   const { firstName, lastName, email, major, points, picture, quote } = members;
   const { loading } = general;
-  const { privilege } = auth;
+  const { privilege } = user;
 
   return { firstName, lastName, email, major, points, picture, quote, loading, privilege };
 };

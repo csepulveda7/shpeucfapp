@@ -1,9 +1,17 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { connect } from 'react-redux';
-import { emailChanged, passwordChanged, loginUser, goToResetPassword, goToRegistration } from '../../actions';
-import { Card, CardSection, Spinner, Button, Input } from '../general';
-import {RkTheme, RkAvoidKeyboard, RkButton} from 'react-native-ui-kitten';
+import {
+  emailChanged,
+  passwordChanged,
+  loginUser,
+  goToResetPassword,
+  goToRegistration,
+  registrationError
+} from '../../ducks';
+
+import { Spinner, Button, Input } from '../general';
+import { RkAvoidKeyboard } from 'react-native-ui-kitten';
 
 class LoginForm extends Component {
 
@@ -16,8 +24,20 @@ class LoginForm extends Component {
   }
 
   onButtonPress() {
-    const { email, password } = this.props;
-    this.props.loginUser({ email, password });
+      const {
+        email,
+        password
+      } = this.props;
+
+    if(email === null || email === undefined){
+      this.props.registrationError('Please enter your knights email')
+      return
+    } else if ( password === null || password === undefined){
+      this.props.registrationError('Please enter your password')
+      return
+    } else{
+      this.props.loginUser({ email, password });
+    }
   }
 
   renderError() {
@@ -60,10 +80,10 @@ class LoginForm extends Component {
   }
 
   renderButtons() {
-    
+
     return (
       <View style={styles.buttonContainer}>
-        <Button 
+        <Button
           title = "LOG IN"
           onPress={this.onButtonPress.bind(this)}
         />
@@ -82,13 +102,12 @@ class LoginForm extends Component {
       headerSubtitleStyle,
     } = styles
     return (
-      <View style={formContainerStyle}> 
-        <RkAvoidKeyboard style={headerContainer}>
-          <ScrollView style= {{flex: 1}}>
+      <View style={formContainerStyle}>
+        <ScrollView style={{ flex: 1.5, paddingTop: 10 }}>
             <Image
-              source={require('../../assets/images/Icon_SHPE_UCF_152x152.png')}
+              source={require('../../assets/images/SHPE_UCF_Logo.png')}
               style={{alignSelf: 'center'}}
-            />
+            /> 
             <View style={headerContainer}>
               <View style={headerTitle}>
                 <Text style={headerTextStyle}>S H P E  </Text>
@@ -97,10 +116,8 @@ class LoginForm extends Component {
             </View>
             <Text style={headerSubtitleStyle}>Society of Hispanic Professional Engineers</Text>
           </ScrollView>
-        </RkAvoidKeyboard>
-        <RkAvoidKeyboard style={{flex:1}}>
           <ScrollView style= {{flex: 1}}>
-            <Input       
+            <Input
               placeholder="Knights Email"
               value={this.props.email}
               autoCapitalize="none"
@@ -115,7 +132,6 @@ class LoginForm extends Component {
               onChangeText={this.onPasswordChange.bind(this)}
             />
           </ScrollView>
-        </RkAvoidKeyboard>
         {this.renderError()}
         {this.renderButtons()}
       </View>
@@ -124,9 +140,7 @@ class LoginForm extends Component {
   }
 
   render() {
-    if (this.props.loggedIn) {
-      return <Spinner />;
-    } else  return this.renderContent();
+    return this.renderContent();
   }
 }
 
@@ -137,9 +151,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerContainer:{
-    flex: 2,
+    flex: 1.5,
     alignItems: 'center',
-    paddingTop: 40,
+    paddingTop: 10
   },
   headerTextStyle: {
 		color: 'white',
@@ -154,10 +168,8 @@ const styles = StyleSheet.create({
 		color: 'gray',
     fontWeight: 'bold',
     flex: 1,
-    paddingTop: 10,
 	},
   errorTextStyle: {
-    flex: 1,
     fontSize: 14,
     alignSelf: 'center',
     color: 'red',
@@ -168,7 +180,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flex: .8,
-    paddingTop: 10,
+
   },
   resetPasswordText: {
     fontWeight: 'bold',
@@ -185,12 +197,11 @@ const styles = StyleSheet.create({
     flex:.3,
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingTop: 10
   },
 });
 
-const mapStateToProps = ({ auth }) => {
-  const { email, password, error, loading, loggedIn } = auth;
+const mapStateToProps = ({ user }) => {
+  const { email, password, error, loading, loggedIn } = user;
 
   return { email, password, error, loading, loggedIn };
 };
@@ -200,6 +211,8 @@ const mapDispatchToProps = {
   passwordChanged,
   loginUser,
   goToResetPassword,
-  goToRegistration};
+  goToRegistration,
+  registrationError
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(LoginForm);

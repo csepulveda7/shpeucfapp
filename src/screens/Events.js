@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {Button} from '../components/general'
+import { Button, NavBar } from '../components/general'
 import { Agenda } from 'react-native-calendars';
 import {
   TouchableOpacity,
@@ -14,6 +14,7 @@ import {
 import {
   fetchEvents,
   getPrivilege,
+  committeeChanged,
   typeChanged,
   nameChanged,
   descriptionChanged,
@@ -24,7 +25,7 @@ import {
   eventIDChanged,
   goToCreateEvent,
   goToViewEvent
-} from '../actions';
+} from '../ducks';
 
 const dimension = Dimensions.get('window');
 
@@ -34,23 +35,14 @@ class Events extends Component {
     this.alert(new Date());
   }
 
-  renderButton(){
-    if(this.props.privilege !== undefined && this.props.privilege.board){
-      return (
-          <Button
-              title = "CREATE EVENT"
-              onPress={this.props.goToCreateEvent.bind(this)}
-          />
-      )
-    }
-  }
   render() {
     const {
       textColor
     } = styles
     return (
-      <View>
-        <ScrollView>
+      <View style={{ flex: 1, backgroundColor: '#0c0b0b'}}>
+        <NavBar title="Events" />
+        <ScrollView style={{flex:1}}>
           <Agenda
             selected={new Date()}
             //onDayChange={(day)=>{alert('day pressed')}}
@@ -89,11 +81,23 @@ class Events extends Component {
             }}
           />
         </ScrollView>
-        <View style={{height: dimension.height, backgroundColor: '#0c0b0b'}}>
+        <View style={{flex: .1}}>
             {this.renderButton()}
         </View>
       </View>
     );
+  }
+
+  renderButton(){
+    if(this.props.privilege !== undefined && this.props.privilege.board){
+      this.props.nameChanged("");
+      return (
+          <Button
+              title = "CREATE EVENT"
+              onPress={this.props.goToCreateEvent.bind(this)}
+          />
+      )
+    }
   }
 
   getFormattedEventList() {
@@ -139,6 +143,7 @@ class Events extends Component {
 
   viewEvent(item) {
     this.props.typeChanged(item.type);
+    this.props.committeeChanged(item.committee);
     this.props.nameChanged(item.name)
     this.props.descriptionChanged(item.description)
     this.props.dateChanged(item.date)
@@ -155,11 +160,16 @@ class Events extends Component {
       textColor,
       itemContainer
     } = styles
+
+    var viewName = item.name;
+    if (item.committee !== ''){
+      viewName = item.committee + ": " + item.name;
+    }
     
     return (
       <TouchableOpacity onPress={this.viewEvent.bind(this,item)}>
           <View style={itemContainer}>
-            <Text style={[{ fontWeight: 'bold'},textColor]}>{item.name}</Text>
+            <Text style={[{ fontWeight: 'bold'},textColor]}>{viewName}</Text>
             <Text style={textColor}>Time: {item.time}</Text>
             <Text style={textColor}>Location: {item.location}</Text>
         </View>
@@ -240,15 +250,16 @@ const styles = StyleSheet.create({
   },
 });
 
-const mapStateToProps = ({ events, auth }) => {
+const mapStateToProps = ({ events, user }) => {
   const { eventList } = events;
-  const { privilege } = auth;
+  const { privilege } = user;
   return { eventList, privilege };
 };
 
 const mapDispatchToProps = {
   fetchEvents,
   getPrivilege,
+  committeeChanged,
   typeChanged,
   nameChanged,
   descriptionChanged,

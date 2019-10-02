@@ -27,7 +27,7 @@ import {
   goToLogIn,
   editUser,
   goToProfile,
-  } from '../../actions';
+  } from '../../ducks';
 
 const collegeNames = [];
 collegesJson.map(college => {collegeNames.push(college.collegeName)});
@@ -63,7 +63,14 @@ class EditProfileForm extends Component {
       gender,
       birthday,
       goToProfile,
-      quote } = this.props;
+      quote,
+      continentChanged,
+      nationalityChanged,
+      genderChanged,
+      collegeChanged,
+      majorChanged,
+      birthDateChanged
+      } = this.props;
 
     const ucfStudentEmail = new RegExp(/^[A-Za-z0-9._%+-]+@(knights.|)ucf.edu$/i);
 
@@ -78,17 +85,9 @@ class EditProfileForm extends Component {
         registrationError('Please enter your school email');
       } else if (!ucfStudentEmail.test(email)) {
         registrationError('Please use a "knights.ucf.edu", or "ucf.edu" email for registration');
-      } else if (password === '') {
-        registrationError('Please enter password');
-      } else if (confirmPassword === '') {
-        registrationError('Please confirm password');
-      } else if (password !== confirmPassword) {
-        registrationError('Passwords do not match, please try again');
-      } else if (points == '') {
-        registrationError('Please enter your points');
-      } else if (nationality == '') {
+      } else if (nationality === '') {
         registrationError('Please enter your country of origin');
-      } else if (birthday == '') {
+      } else if (birthday === '') {
         registrationError('Please enter your date of birth');
       } else if (college === '') {
         registrationError('Please enter college');
@@ -96,18 +95,16 @@ class EditProfileForm extends Component {
         registrationError('Please enter major');
       }
       else {
-        this.onPointsChange(0);
-        editUser( firstName, lastName, email, college, major, points, picture, password, quote, continent, nationality, gender, birthday );
-        goToProfile();
+        editUser( firstName, lastName, email, college, major, quote, continent, nationality, gender, birthday );
+        Actions.replace('profile')
       }
     } else if (college === '') {
       registrationError('Please enter college');
     } else if (major === '') {
       registrationError('Please enter major');
     }  else {
-      this.onPointsChange(0);
-      editUser( firstName, lastName, email, college, major, points, picture, password, quote, continent, nationality, gender, birthday );
-      goToProfile();
+      editUser( firstName, lastName, email, college, major, quote, continent, nationality, gender, birthday );
+      Actions.replace('profile')
     }
   }
 
@@ -228,8 +225,6 @@ class EditProfileForm extends Component {
       genderChanged,
       birthday,
       birthDateChanged,
-      points,
-      pointsChanged
     } = this.props
     if (this.checkPrivilege('eboard')) {
       return (
@@ -249,11 +244,6 @@ class EditProfileForm extends Component {
               keyboardType="email-address"
               value={email}
               onChangeText={(text) => emailChanged(text)}
-            />
-            <Input
-              placeholder="Points"
-              value={points + ""}
-              onChangeText={(text) => pointsChanged(text)}
             />
             <PickerInput
               title={"Gender"}
@@ -307,6 +297,8 @@ class EditProfileForm extends Component {
 
 
   render() {
+    var content = this.renderPickers();
+    if (this.checkPrivilege('eboard')) content = this.renderIfEboard(); 
     return (
       <View style={styles.container}>
         <View style={styles.formContainerStyle}>
@@ -323,8 +315,7 @@ class EditProfileForm extends Component {
           style={styles.scrollView}>
 
           <RkAvoidKeyboard>
-            {this.renderIfEboard()}
-            {this.renderPickers()}
+            {content}
             {/* <Input
               placeholder='Quote'
               autoCapitalize='sentences'
@@ -421,7 +412,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const mapStateToProps = ({ auth }) => {
+const mapStateToProps = ({ user }) => {
   const {
     firstName,
     lastName,
@@ -437,7 +428,7 @@ const mapStateToProps = ({ auth }) => {
     privilege,
     error,
     loading,
-    quote } = auth;
+    quote } = user;
 
   return {
     firstName,

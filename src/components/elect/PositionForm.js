@@ -7,15 +7,22 @@ import {
     addPosition,
     editPosition,
     positionTitleChanged,
-    positionDescriptionChanged
-} from '../../actions'
+    positionDescriptionChanged,
+    deletePosition,
+} from '../../ducks'
 import { Actions } from 'react-native-router-flux';
+
+
 
 
 class PositionForm extends Component {
     // EventCreationError(text) {
     //     this.props.eventError(text);
     // }
+    constructor(props) {
+      super(props);
+      this.state = {oldTitle: this.props.positionTitle};
+    }
 
 
     renderError() {
@@ -34,8 +41,13 @@ class PositionForm extends Component {
         const {
             positionTitle,
             candidatePlan,
-            positionDescription
+            positionDescription,
+            positions
         } = this.props;
+
+
+        var length = (positions !== null && positions !== undefined) ? Object.entries(positions).length : 0
+
         if (positionTitle === '') {
             // this.EventCreationError('Please enter a Candidate Name');
         } else if (candidatePlan === '') {
@@ -43,10 +55,18 @@ class PositionForm extends Component {
         } else if (positionDescription === '') {
             // this.EventCreationError('Please enter a position');
         } else{
-            if(this.props.title === "ADD")
-                this.props.addPosition(positionTitle,positionDescription);
-            else
-                this.props.editPosition(positionTitle, positionDescription);
+            if(this.props.title === "ADD"){
+
+                this.props.addPosition(positionTitle, positionDescription, length);
+              }
+            else {
+                if (this.state.oldTitle !== positionTitle)
+                {
+                  this.props.editPosition(positionTitle, positionDescription, this.state.oldTitle);
+                }
+                else{
+                this.props.editPosition(positionTitle, positionDescription, null);}
+              }
             Actions.ElectionPositions();
         }
     }
@@ -73,18 +93,18 @@ class PositionForm extends Component {
                             value={this.props.positionDescription}
                             onChangeText={this.props.positionDescriptionChanged.bind(this)}
                             />
-                           
+
                         </View>
                         {this.renderError()}
-                        <Button 
-                            title = {this.props.title + " POSITION"}
-                            onPress={this.onButtonPress.bind(this)}
-                        />
-                        <Button 
-                            title = "CANCEL"
-                            onPress={Actions.ElectionPositions.bind(this)}
-                        />
                     </ScrollView>
+                    <Button
+                        title = {this.props.title + " POSITION"}
+                        onPress={this.onButtonPress.bind(this)}
+                    />
+                    <Button
+                        title = "CANCEL"
+                        onPress={Actions.ElectionPositions.bind(this)}
+                    />
                 </View>
             )
         }
@@ -98,10 +118,10 @@ const styles = StyleSheet.create({
     },
     formContainerStyle: {
         flex: 1,
-        marginLeft: 20,
-        marginRight: 20,
         paddingTop: 30,
+        padding: 10,
         paddingBottom: 10,
+        backgroundColor: "#2C3239"
     },
     headerStyle: {
         flexDirection: 'column',
@@ -113,6 +133,7 @@ const styles = StyleSheet.create({
     headerTextStyle: {
         fontSize: 22,
         fontWeight: 'bold',
+        color: '#e0e6ed'
     },
     errorTextStyle: {
         fontSize: 14,
@@ -136,16 +157,17 @@ const styles = StyleSheet.create({
 });
 
 const mapStateToProps = ({ elect }) => {
-    const { positionTitle, positionDescription, title} = elect;
+    const { positionTitle, positionDescription, title, positions} = elect;
 
-    return { positionTitle, positionDescription, title};
+    return { positionTitle, positionDescription, title, positions};
 };
 
 const mapDispatchToProps = {
    addPosition,
    editPosition,
    positionTitleChanged,
-   positionDescriptionChanged
+   positionDescriptionChanged,
+   deletePosition,
 }
 
 
