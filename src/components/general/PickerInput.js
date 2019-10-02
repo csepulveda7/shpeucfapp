@@ -18,21 +18,31 @@ class PickerInput extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {text: '', modalVisible: false}
+        this.state = {text: this.props.value, modalVisible: false}
     }
     static propTypes = {
         title: PropTypes.string.isRequired,
+        value: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.number
+        ]).isRequired,
         data: PropTypes.oneOfType([
             PropTypes.array,
             PropTypes.shape({})
         ]).isRequired,
         placeholder: PropTypes.string,
-        onSelect: PropTypes.func.isRequired
+        onSelect: PropTypes.func.isRequired,
+        inputBoxStyle: PropTypes.shape({}),
+        style: PropTypes.shape({}),
+        pickerItemStyle: PropTypes.shape({}),
+        dropDownArrowStyle: PropTypes.shape({}),
+        iconSize: PropTypes.number,
+        iconColor: PropTypes.string
     }
 
     clickAction(item) {
         this.props.onSelect(item)
-        this.setState({text: item, modalVisible: false})
+        this.setState({text: String(item), modalVisible: false})
     }
 
     renderComponent(item) {
@@ -42,14 +52,10 @@ class PickerInput extends Component {
             itemTextStyle
         } = styles
 
-        const dataArr = Object.keys(this.props.data)
-
-        last = (item[0] == dataArr[dataArr.length - 1]) ? 
-            {borderBottomColor: '#0000'} : {}
         return(
             <TouchableOpacity
             onPress={() => this.clickAction(item[1])}>
-                <View style={[itemStyle,last]}>
+                <View style={[itemStyle, this.props.pickerItemStyle]}>
                     <Text style={itemTextStyle}>{item[1]}</Text>
                 </View>
             </TouchableOpacity>
@@ -73,25 +79,35 @@ class PickerInput extends Component {
 
         const {
             title,
+            value,
             data,
             placeholder,
+            style,
+            inputBoxStyle,
+            dropDownArrowStyle,
+            iconSize,
+            iconColor
         } = this.props
-
+        if(value !== undefined && value !== null && this.state.text !== String(value)){
+            this.setState({text: String(value)})
+        }
 
         return (
             <View>
-                <View style={{flexDirection:'row'}}>
+                <View style={[{flexDirection:'row'}, style]}>
                     <Input
-                    style={inputStyle}
+                    style={[inputStyle, inputBoxStyle]}
                     value={this.state.text}
                     placeholder={placeholder}
                     editable={false}
                     />
                     <Ionicons
                     onPress={() => this.setState({modalVisible: true})}
-                    style={iconStyle}
+                    style={[iconStyle, dropDownArrowStyle]}
                     name={'ios-arrow-dropdown'}
-                    size={50}/>
+                    size={iconSize}
+                    color={iconColor}
+                    />
                 </View>
                 <Modal
                 transparent={true}
@@ -127,13 +143,14 @@ class PickerInput extends Component {
 
 PickerInput.defaultProps = {
     title: 'Give me a title!',
-    placeholder: 'Choose an Option'
+    placeholder: 'Choose an Option',
+    iconSize: 50,
+    iconColor: 'white'
 }
 
 const styles = {
     itemStyle: {
         flex: 1,
-        height: dimension.height *.15,
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'column',
@@ -142,6 +159,7 @@ const styles = {
     },
     itemTextStyle: {
         paddingTop: dimension.height * .03,
+        paddingBottom: dimension.height * .03,
         flex: 1,
         fontSize: 16,
         alignSelf:'center',
@@ -157,8 +175,7 @@ const styles = {
         alignSelf: 'center'
     },
     flatlistStyle: {
-        flex: .8,
-        // backgroundColor: '#000a'
+        flex: .8
     },
     buttonContainer:{
         flex:.2,

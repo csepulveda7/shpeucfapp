@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import {Text, ScrollView, View, StyleSheet }from 'react-native';
+import  {Text, ScrollView, View, StyleSheet }from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { List, ListItem } from 'react-native-elements';
+import { NavBar } from '../components/general';
 
 const forms = [
   {
@@ -74,19 +75,22 @@ const forms = [
 class Forms extends Component {
   render() {
     return (
-      <ScrollView>
+      <View style={{flex: 1, backgroundColor: '#2C3239'}}>
+        <NavBar title="Forms" back onBack={() => Actions.pop()} />
+        <ScrollView>
         {
           forms.map((form, i) => (
             <View key={i}>
               <Text style={styles.sectionTitle}>
                 {form.group.name}
               </Text>
-              <List containerStyle={{ marginTop: 10 }}>
+              <List containerStyle={{ backgroundColor: '#0c0b0b', marginTop: 10 }}>
                 {
                 form.group.items.map((item, i) => (
                     <ListItem
                       key={i}
                       title={item.title}
+                      titleStyle={{ color: 'white'}}
                       subtitle={item.description}
                       onPress={() => Actions.WebPageShow(
                         { title: item.title,
@@ -99,15 +103,18 @@ class Forms extends Component {
             </View>
           ))
         }
-      </ScrollView>
-
+        </ScrollView>
+      </View>
     );
   };
 }
 
 const styles = StyleSheet.create({
   sectionTitle: {
-    marginTop: 10,
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 15,
+    marginTop: 10, 
     marginLeft: 20,
   }
 });

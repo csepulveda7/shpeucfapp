@@ -7,11 +7,11 @@ import {
   Input,
   Button,
   Spinner,
-  PickerInput
+  PickerInput,
+  DatePicker
 } from '../general';
-import {RkAvoidKeyboard, RkTextInput, RkPicker, RkText} from 'react-native-ui-kitten';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import data from '../../data/Colleges.json';
+import collegesJson from '../../data/Colleges.json';
+import countriesJson from '../../data/Countries.json';
 import {
   firstNameChanged,
   lastNameChanged,
@@ -19,21 +19,26 @@ import {
   collegeChanged,
   majorChanged,
   passwordChanged,
-  pointsChanged,
   privilegeChanged,
   pictureChanged,
-  nationality_changed, 
-  date_birth_changed,
+  continentChanged, 
+  nationalityChanged, 
+  birthDateChanged,
   confirmPasswordChanged,
   registrationError,
+  quoteChanged,
   createUser,
   goToLogIn,
-  quoteChanged } from '../../actions';
+  genderChanged,
+   } from '../../ducks';
 
 const collegeNames = [];
-data.map(college => {collegeNames.push(college.collegeName)});
+collegesJson.map(college => {collegeNames.push(college.collegeName)});
 var majorNames =  {};
-data.map(college => {majorNames[college.collegeName] = college.degrees});
+collegesJson.map(college => {majorNames[college.collegeName] = college.degrees});
+const continents = Object.keys(countriesJson);
+var countries =  {};
+continents.map(continent => {countries[continent] = countriesJson[continent]});
 
 const iconName= Platform.OS === 'ios'?'ios-arrow-dropdown':'md-arrow-dropdown';
 
@@ -48,15 +53,6 @@ class RegistrationForm extends Component {
   onEmailChange(text) {
     this.props.emailChanged(text);
   }
-  onCollegeChange(text) {
-    this.props.collegeChanged(text);
-  }
-  onMajorChange(text) {
-    this.props.majorChanged(text);
-  }
-  onPointsChange(text) {
-    this.props.pointsChanged(text);
-  }
   onPrivilegeChange(text) {
     this.props.privilegeChanged(text);
   }
@@ -69,11 +65,8 @@ class RegistrationForm extends Component {
   onConfirmPasswordChange(text) {
     this.props.confirmPasswordChanged(text);
   }
-  onnationality_changed(text) {
-    this.props.nationality_changed(text);
-  }
-  ondate_birth_changed(text) {
-    this.props.date_birth_changed(text);
+  onBirthDateChanged(text) {
+    this.props.birthDateChanged(text);
   }
   onQuoteChange(text) {
     this.props.quoteChanged(text);
@@ -92,10 +85,18 @@ class RegistrationForm extends Component {
       confirmPassword,
       registrationError,
       createUser,
+      continent,
       nationality,
-      date_of_birth,
-      goToLogIn,
-      quote } = this.props;
+      gender,
+      birthday,
+      quote,
+      continentChanged,
+      nationalityChanged,
+      genderChanged,
+      collegeChanged,
+      majorChanged,
+      birthDateChanged
+     } = this.props;
 
     const ucfStudentEmail = new RegExp(/^[A-Za-z0-9._%+-]+@(knights.|)ucf.edu$/i);
 
@@ -107,24 +108,33 @@ class RegistrationForm extends Component {
       registrationError('Please enter your school email');
     } else if (!ucfStudentEmail.test(email)) {
        registrationError('Please use a "knights.ucf.edu", or "ucf.edu" email for registration');
-    } else if (college === '') {
-      registrationError('Please enter college');
-    } else if (major === '') {
-      registrationError('Please enter major');
     } else if (password === '') {
       registrationError('Please enter password');
     } else if (confirmPassword === '') {
       registrationError('Please confirm password');
     } else if (password !== confirmPassword) {
       registrationError('Passwords do not match, please try again');
-    } else if(nationality == '') {
-      registrationError('Please enter your country of origin');
-    } else if(date_of_birth == ''){
-      registrationError('Please enter your date of birth');
     } else if (password === confirmPassword) {
-      this.onPointsChange(0);
-      createUser({ firstName, lastName, email, college, major, points, picture, password, quote , nationality, date_of_birth});
+      this.props.createUser(firstName, lastName, email, college, major, points, picture, password, quote, continent, nationality, gender, birthday);
     }
+  }
+
+  createUser(){
+    const {
+      firstName,
+      lastName,
+      email,
+      college,
+      points,
+      picture,
+      major,
+      password,
+      continent,
+      nationality,
+      gender,
+      birthday,
+      quote,
+    } = this.props
   }
 
   renderError() {
@@ -139,7 +149,7 @@ class RegistrationForm extends Component {
     }
   }
 
-  renderPickers() {
+  renderCollegePickers() {
     const {
       college,
       collegeChanged,
@@ -147,11 +157,11 @@ class RegistrationForm extends Component {
       majorChanged
     } = this.props
 
-    const p1 = (college !== undefined && college !== null && college !== "") ?
+    const p1 = (college !== undefined && college !== null && college !== "" && college != "Do not wish to disclose") ?
       (<PickerInput
-            title={"Colleges"}
+            title={"Major"}
             data={majorNames[college]}
-            placeholder={"Select College"}
+            placeholder={"Select major"}
             onSelect={(text) => majorChanged(text)}/>) : (<View></View>)
 
         return(
@@ -159,8 +169,35 @@ class RegistrationForm extends Component {
           <PickerInput
             title={"Colleges"}
             data={collegeNames}
-            placeholder={"Select College"}
+            placeholder={"Select college"}
             onSelect={(text) => collegeChanged(text)}/>
+          {p1}
+          
+        </View>
+      )
+  }
+
+  renderCountryPickers() {
+    const {
+      continent,
+      continentChanged,
+      nationalityChanged
+    } = this.props
+
+    const p1 = (continent !== undefined && continent !== null && continent !== "" && continent !== "Do not wish to disclose") ?
+      (<PickerInput
+            title={"Nationality"}
+            data={countries[continent]}
+            placeholder={"Select country of origin"}
+            onSelect={(text) => nationalityChanged(text)}/>) : (<View></View>)
+
+        return(
+        <View>
+          <PickerInput
+            title={"Continent"}
+            data={continents}
+            placeholder={"Select continent of origin"}
+            onSelect={(text) => continentChanged(text)}/>
           {p1}
           
         </View>
@@ -215,15 +252,7 @@ class RegistrationForm extends Component {
             <Text style={styles.headerSubtitleStyle}>Registration</Text>
 						<Text style={styles.underheaderSubtitleStyle}> </Text>
           </View>
-
-          <ScrollView
-          ref={'scrollView'}
-          decelerationRate={0}
-          snapToAInterval={300}
-          snapToAlignment={"center"}
-          style={styles.scrollView}>
-
-          <RkAvoidKeyboard>
+          <ScrollView>
             <Input
               placeholder="First Name"
               value={this.props.firstName}
@@ -238,10 +267,10 @@ class RegistrationForm extends Component {
             <Input
               placeholder="School Email"
               keyboardType="email-address"
+              autoCapitalize = "none"
               value={this.props.email}
               onChangeText={this.onEmailChange.bind(this)}
               />
-
             <Input
               secureTextEntry
               placeholder="Password"
@@ -257,22 +286,21 @@ class RegistrationForm extends Component {
               onChangeText={this.onConfirmPasswordChange.bind(this)}
               />
 
-            <Input
-              placeholder="Country of Origin"
-              value={this.props.nationality}
-              onChangeText={this.onnationality_changed.bind(this)}
-              />
 
-            <Input
-              placeholder="Date of Birth"
-              value={this.props.date_of_birth}
-              onChangeText={this.ondate_birth_changed.bind(this)}
-              />
+            <PickerInput
+              title={"Gender"}
+              data={["Female","Male","Other","Do not wish to disclose"]}
+              placeholder={"Select your gender"}
+              onSelect={(text) => this.props.genderChanged(text)}
+            />            
+            {this.renderCountryPickers()}
+            {this.renderCollegePickers()}
 
-            {this.renderPickers()}
-          </RkAvoidKeyboard>
+            <DatePicker
+              placeholder={"Birthday"}
+              onSelect={(text) => this.onBirthDateChanged(text)}
+              />
           </ScrollView>
-
           {this.renderError()}
           {this.renderButtons()}
 
@@ -287,7 +315,7 @@ const { height: D_HEIGHT, width: D_WIDTH } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'gray',
+    backgroundColor: '#0c0b0b',
     justifyContent: 'flex-end',
   },
   formContainerStyle: {
@@ -353,11 +381,11 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
 	Alreadyaccount: {
-		color: 'black',
+		color: 'grey',
 	}
 });
 
-const mapStateToProps = ({ auth }) => {
+const mapStateToProps = ({ user }) => {
   const {
     firstName,
     lastName,
@@ -368,12 +396,14 @@ const mapStateToProps = ({ auth }) => {
     points,
     privilege,
     password,
+    continent,
     nationality,
-    date_of_birth,
+    gender,
+    birthday,
     confirmPassword,
     error,
     loading,
-    quote } = auth;
+    quote } = user;
 
   return {
     firstName,
@@ -385,8 +415,10 @@ const mapStateToProps = ({ auth }) => {
     points,
     privilege,
     password,
+    continent,
     nationality,
-    date_of_birth,
+    gender,
+    birthday,
     confirmPassword,
     error,
     loading,
@@ -399,16 +431,18 @@ const mapDispatchToProps = {
   emailChanged,
   collegeChanged,
   majorChanged,
-  pointsChanged,
   privilegeChanged,
   pictureChanged,
   passwordChanged,
-  nationality_changed,
-  date_birth_changed,
+  continentChanged,
+  nationalityChanged,
+  birthDateChanged,
   confirmPasswordChanged,
   registrationError,
   createUser,
   goToLogIn,
-  quoteChanged }
+  quoteChanged,
+  genderChanged
+}
 
 export default connect(mapStateToProps, mapDispatchToProps)(RegistrationForm);

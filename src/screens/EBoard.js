@@ -9,8 +9,6 @@ import {
   Alert } from 'react-native';
 import { Card, Button, List, ListItem, Divider, Avatar } from 'react-native-elements';
 
-
-
 class EBoard extends Component {
   render() {
     const {
@@ -19,13 +17,15 @@ class EBoard extends Component {
       shpeInfoRow,
       infoLabel,
       infoValue,
-      signalInfoLabel } = styles;
+      signalInfoLabel,
+      titleColor } = styles;
 
     return (
       <View style={styles.container}>
-        <ScrollView>
+        <ScrollView style={{backgroundColor: '#0c0b0b'}}>
           <Card
             title='Piero Castillo'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -45,6 +45,7 @@ class EBoard extends Component {
 
           <Card
             title='Nicole Vargas'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -64,6 +65,7 @@ class EBoard extends Component {
 
           <Card
             title='Yamil Herrera'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -83,6 +85,7 @@ class EBoard extends Component {
 
           <Card
             title='Ana Riveros'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -102,6 +105,7 @@ class EBoard extends Component {
 
           <Card
             title='Daniel Castro'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -121,6 +125,7 @@ class EBoard extends Component {
 
           <Card
             title='Joel Montano'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -141,6 +146,7 @@ class EBoard extends Component {
 
           <Card
             title='Carlos Arboleda'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -160,6 +166,7 @@ class EBoard extends Component {
 
           <Card
             title='Ignacio Lopez'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -179,6 +186,7 @@ class EBoard extends Component {
 
           <Card
             title='Luis Benavides'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -198,6 +206,7 @@ class EBoard extends Component {
 
           <Card
             title='Lucyana Panti'
+            titleStyle={titleColor}
             containerStyle={cardContainer}>
             <View style={shpeInfoContainer}>
               <View style={shpeInfoRow}>
@@ -224,8 +233,6 @@ class EBoard extends Component {
 }
 
 
-
-
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -233,7 +240,8 @@ class EBoard extends Component {
     cardContainer: {
       marginRight: 5,
       marginLeft: 5,
-      marginTop: 5
+      marginTop: 5,
+      backgroundColor: '#2C3239',
     },
     shpeInfoContainer: {
       marginBottom: 10,
@@ -242,24 +250,29 @@ class EBoard extends Component {
       marginBottom: 10,
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
     },
     infoLabel: {
      fontSize: 20,
      fontWeight: 'bold',
      alignItems: 'center',
-     justifyContent: 'center'
+     justifyContent: 'center',
+     color: 'white'
     },
     infoValue: {
      fontSize: 15,
-     fontWeight: 'normal'
+     fontWeight: 'normal',
+     color: 'white'
     },
     signalInfoLabel: {
       marginBottom: 10,
       marginLeft: 10,
-      color: '#666',
+      color: 'white',
       fontWeight: 'bold',
-    }
+    },
+    titleColor: {
+      color: 'white'
+    },
 
   });
 

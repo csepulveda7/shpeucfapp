@@ -1,46 +1,42 @@
 import React, { Component } from 'react';
 import { Actions } from 'react-native-router-flux';
-import {
-  ScrollView,
-  FlatList } from 'react-native';
+import { ScrollView, FlatList, Text, View, RefreshControl } from 'react-native';
 import { connect } from 'react-redux';
 import { ListItem } from 'react-native-elements';
-import { Spinner} from '../components/general'
+import { Spinner, NavBar } from '../components/general'
+
 
 import {
   getPrivilege,
-  pageLoad
-} from "../actions"
+  pageLoad,
+  updateElection
+} from "../ducks"
+
+
 
   const menuItems = [
     {
       title: 'Leaderboard',
       icon: 'format-align-left',
       screen: 'Leaderboard',
-      privilege: "user"
-    },
-    {
-      title: 'Resources',
-      icon: 'layers',
-      screen: 'Resources',
-      privilege: "user"
-    },
-    {
-      title: 'Check In',
-      icon: 'done',
-      screen: 'CheckIn',
-      privilege: "user"
-    },
-    {
-      title: 'Forms',
-      icon: 'assignment',
-      screen: 'Forms',
-      privilege: "user"
+      privilege: "user",
     },
     {
       title: 'Election',
       icon: 'done',
       screen: 'Election',
+      privilege: "user"
+    },
+    {
+      title: 'Conventions',
+      icon: 'airplanemode-active',
+      screen: 'Conventions',
+      privilege: "user"
+    },
+    {
+      title: 'Committees',
+      icon: 'assignment-ind',
+      screen: 'Committees',
       privilege: "user"
     },
     {
@@ -65,53 +61,84 @@ import {
 
 class More extends Component {
 
-  componentDidMount(){
-    this.props.pageLoad();
-    this.props.getPrivilege();
+  constructor(props) {
+    super(props);
+    this.state = {
+      refreshing: false,
+    };
   }
 
+  render() {
+    return (
+      <View style={{backgroundColor: '#2C3239', flex: 1}}>
+        <NavBar title="More Options" />
+        <ScrollView
+        //    refreshControl={
+        //   <RefreshControl
+        //     refreshing={this.state.refreshing}
+        //     onRefresh={this._onRefresh}
+        //   />
+        // }
+        >
+        <FlatList
+          removeClippedSubviews={false}
+          extraData={this.props}
+          keyExtractor = {this.keyExtractor}
+          data = {menuItems}
+          renderItem={this.renderItem}
+        />
+        </ScrollView>
+      </View>
+    );
+  }
+
+  _onRefresh = () => {
+    this.setState({refreshing: false});
+  }
   keyExtractor = (item, index) => index
 
   renderItem  = ({item}) => {
+    const {
+      election,
+      privilege,
+      apply,
+    } = this.props
 
-    if (this.props.privilege !== undefined && this.props.privilege[item.privilege] === true ) {
+    if (item.title === "Election" && (((election === false || election === undefined || election === null)
+    && (apply === false || apply === undefined || apply === null)) ||
+    (privilege.paidMember === false || privilege.paidMember === undefined || privilege.paidMember === null))) {
+      return (null);
+    }
+
+    if (privilege !== undefined && privilege[item.privilege] === true ) {
       return(
         <ListItem
+          containerStyle={{ backgroundColor: '#2C3239', borderBottomColor: 'white', borderBottomWidth: 1}}
+          removeClippedSubviews={false}
           title={item.title}
-          leftIcon={{name: item.icon}}
+          chevron
+          titleStyle={{ color: 'white'}}
+          leftIcon={{name: item.icon , color: 'white' }}
           onPress={() => Actions[item.screen]()}
         />
       )
     }
   }
 
-  render() {
-  if(this.props.loading){
-    return <Spinner>{this.renderContent}</Spinner>
-  }
-  else
-    return (
-      <ScrollView>
-        <FlatList
-          keyExtractor = {this.keyExtractor}
-          data = {menuItems}
-          renderItem={this.renderItem}
-        />
-      </ScrollView>
-    );
-  };
 }
 
-const mapStateToProps = ({ auth, general }) => {
-  const { privilege } = auth;
+const mapStateToProps = ({ user, general, elect }) => {
+  const { privilege } = user;
   const { loading } = general;
+  const { election, apply} = elect;
 
-  return { privilege, loading };
+  return { privilege, loading, election, apply };
 };
 
 const mapDispatchToProps = {
   getPrivilege,
-  pageLoad
+  pageLoad,
+  updateElection
  };
 
 

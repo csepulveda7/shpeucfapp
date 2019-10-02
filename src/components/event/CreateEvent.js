@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {View, StyleSheet, Text, ScrollView} from 'react-native';
-import { Input, Button } from '../general';
+import {View, StyleSheet, Text, ScrollView, Modal, Dimensions, FlatList, TouchableOpacity} from 'react-native';
+import { Input, Button, PickerInput, DatePicker } from '../general';
 import { RkAvoidKeyboard, RkButton, RkPicker } from 'react-native-ui-kitten';
 import {
     createEvent,
     editEvent,
     typeChanged,
+    committeeChanged,
     titleChanged,
     nameChanged,
     descriptionChanged,
@@ -17,17 +18,46 @@ import {
     eventError,
     goToCreateEvent,
     goToEvents
-} from '../../actions'
+} from '../../ducks'
 
+const dimension = Dimensions.get('window');
 
 class CreateEvent extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {text: this.props.value, modalVisible: false}
+    }
+
     componentWillMount() {
         if(this.props.name !== '')
             this.props.titleChanged("Edit Event");
 
     }
     onTypeChange(text) {
+        this.onCommitteeChange('');
         this.props.typeChanged(text);
+        switch (text){
+            case "Social Event":
+                this.onPointsChange(3);
+                break;
+            case "Volunteer Event":
+                    this.onPointsChange(3);
+                    break;
+            case "GBM":
+                    this.onPointsChange(5);
+                    break;
+            case "Workshop":
+                    this.onPointsChange(3);
+                    break;
+            case "Committee":
+                    this.onPointsChange(2);
+                    break;
+            default:
+                    this.onPointsChange('');
+        }
+    }
+    onCommitteeChange(text) {
+        this.props.committeeChanged(text);
     }
     onNameChange(text) {
         this.props.nameChanged(text);
@@ -66,6 +96,7 @@ class CreateEvent extends Component {
     onButtonPress() {
         const {
             type,
+            committee,
             name,
             description,
             date,
@@ -91,30 +122,121 @@ class CreateEvent extends Component {
             this.EventCreationError('Please enter how many points the event is worth');
         }else{
             if(this.props.title === "Create Event")
-                createEvent(type,name,description,date,time,location,points);
+            createEvent(type, committee, name, description, date, time, location, points);
             else
-                editEvent(type, name, description, date, time, location, points, eventID);
+            editEvent(type, committee, name, description, date, time, location, points, eventID);
             this.props.goToEvents();
         }
     }
 
+    clickAction(item) {
+        this.onCommitteeChange(item)
+        this.setState({text: String(item), modalVisible: false})
+    }
+
+    renderComponent(item) {
+
+        const {
+            itemStyle,
+            itemTextStyle
+        } = styles
+
+        const dataArr = Object.keys(this.props.committees)
+
+        last = (item[0] == dataArr[dataArr.length - 1]) ? 
+            {borderBottomColor: '#0000'} : {}
+        return(
+            <TouchableOpacity
+            onPress={() => this.clickAction(item)}>
+                <View style={[itemStyle, this.props.pickerItemStyle,last]}>
+                    <Text style={itemTextStyle}>{item}</Text>
+                </View>
+            </TouchableOpacity>
+        )
+    }
+
+    _keyExtractor = (item, index) => index;
+
+    showCommittees(){
+        const {
+            modalStyle,
+            modalBackground,
+            textStyle,
+            buttonContainer,
+            flatlistStyle,
+            buttonStyle,
+            titleStyle
+        } = styles;
+
+        if (this.props.type == "Committee")
+        {
+            return (
+
+                <View>
+                <Modal
+                transparent={true}
+                visible={this.state.modalVisible}>
+                    <View style={modalBackground}>
+                        <View style={modalStyle}>
+                            <Text style={titleStyle}>{"Committees"}</Text>
+                            <View style={flatlistStyle}>
+                                <FlatList
+                                data={Object.keys(this.props.committees)}
+                                extraData={this.props}
+                                keyExtractor={this._keyExtractor}
+                                renderItem={({item}) => (
+                                    this.renderComponent(item)
+                                )}
+                                />
+                            </View>
+                            <View style={buttonContainer}>
+                                <TouchableOpacity  
+                                style={buttonStyle}
+                                onPress={() => this.setState({modalVisible: false})}>
+                                    <Text style={textStyle}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+            </View>
+            )
+        }
+    }
+
     render() {
+            var stringType;
+            if(this.props.type === "Committee"){
+
+                if(this.props.committee !== ''){
+                    stringType = this.props.type + ": " + this.props.committee
+                }
+
+                else{
+                    stringType = this.props.type;
+                }
+            }
+
+            else{
+                stringType = this.props.type;
+            }
             return (
                 <View style={styles.formContainerStyle}>
                     <View style={styles.headerStyle}>
                         <Text style={styles.headerTextStyle}>{this.props.title}</Text>
-                        {/* <Text style={styles.headerSubtitleStyle}>Registration</Text> */}
                     </View>
                     <ScrollView
                     ref={(ref)=> (this.scrollView=ref)}
                     style={styles.scrollView}>
-                    {/* <RkAvoidKeyboard> */}
                         <View>
-                            <Input
+                            <PickerInput
                             placeholder="Event Type"
-                            value={this.props.type}
-                            onChangeText={this.onTypeChange.bind(this)}
+                            value={stringType}
+                            data={["Committee","Social Event","Volunteer Event", "GBM", "Workshop","Other"]}
+                            onSelect={(item) => {this.onTypeChange(item);
+                            this.setState({modalVisible: true})}}
                             />
+                            {this.showCommittees()}
                             <Input
                             placeholder="Name"
                             value={this.props.name}
@@ -127,10 +249,10 @@ class CreateEvent extends Component {
                             maxLength={200}
                             onChangeText={this.onDescriptionChange.bind(this)}
                             />
-                            <Input
-                            placeholder="Date"
+                            <DatePicker
+                            placeholder={"Date"}
                             value={this.props.date}
-                            onChangeText={this.onDateChange.bind(this)}
+                            onSelect={(text) => this.onDateChange(text)}
                             />
                             <Input
                             placeholder="Time"
@@ -141,30 +263,14 @@ class CreateEvent extends Component {
                             placeholder="Location"
                             value={this.props.location}
                             onChangeText={this.onLocationChange.bind(this)}
-                            // onFocus={this.scrollView.scrollTo({x:100,y:100,animated: true})}
                             />
                             <Input
                             placeholder="Value"
                             value={(this.props.points === 0 || this.props.points === undefined)  ? "" : this.props.points.toString()}
                             onChangeText={this.onPointsChange.bind(this)}
-                            // onFocus={this.scrollView.scrollTo({x:100,y:100,animated: true})}
                             />
-                            {/* <RkPicker
-                            rkType='rounded'
-                            optionHeight={80}
-                            optionRkType={'medium'}
-                            selectedOptionRkType={'medium danger'}
-                            confirmButtonText={'Select'}
-                            title="Colleges"
-                            titleTextRkType={'large'}
-                            data={[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]}
-                            visible={this.state.pickerVisible}
-                            onConfirm={this.handlePickedValueCollege}
-                            onCancel={this.hidePicker1}
-                            selectedOptions={this.state.collegeSelected}
-                            /> */}
                         </View>
-                    {/* </RkAvoidKeyboard> */}
+                    </ScrollView>
                         {this.renderError()}
                         <Button 
                             title = {this.props.title}
@@ -174,7 +280,6 @@ class CreateEvent extends Component {
                             title = "CANCEL"
                             onPress={this.props.goToEvents.bind(this)}
                         />
-                    </ScrollView>
                 </View>
             )
         }
@@ -183,15 +288,27 @@ class CreateEvent extends Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#E1E1E1',
         justifyContent: 'flex-end',
+    },
+    itemStyle: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        borderBottomColor: '#0002',
+        borderBottomWidth: 1
+    },
+    itemTextStyle: {
+        paddingTop: dimension.height * .03,
+        paddingBottom: dimension.height * .03,
+        flex: 1,
+        fontSize: 16,
+        alignSelf:'center',
     },
     formContainerStyle: {
         flex: 1,
-        marginLeft: 20,
-        marginRight: 20,
-        paddingTop: 30,
-        paddingBottom: 10,
+        padding: 20,
+        backgroundColor: '#21252b'
     },
     headerStyle: {
         flexDirection: 'column',
@@ -203,6 +320,7 @@ const styles = StyleSheet.create({
     headerTextStyle: {
         fontSize: 22,
         fontWeight: 'bold',
+        color: '#e0e6ed'
     },
     errorTextStyle: {
         fontSize: 14,
@@ -222,13 +340,53 @@ const styles = StyleSheet.create({
         paddingTop: 0,
         paddingBottom: 0,
         paddingRight: 10,
-    }
+    },
+    titleStyle: {
+        flex: .13,
+        alignSelf: 'center',
+        fontSize: 20
+    },
+    buttonStyle: {
+        flex: 1,
+        alignSelf: 'center'
+    },
+    flatlistStyle: {
+        flex: .8
+    },
+    buttonContainer:{
+        flex:.2,
+        flexDirection: 'row',
+        borderTopColor: '#0001',
+        borderTopWidth: 1
+    },
+    textStyle:{
+        flex: 1,
+        alignSelf: 'center',
+        fontSize: 18,
+        paddingTop: 5
+    },
+    modalBackground: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#0003',
+        margin: 0,
+        height: dimension.height,
+        width: dimension.width,
+    },
+    modalStyle: {
+        height: dimension.height*.4,
+        width: dimension.width*.8,
+        backgroundColor:'#fff',
+        padding: 12,
+        borderRadius: 12,
+    },
 });
 
-const mapStateToProps = ({ events }) => {
-    const { type, title, name, description, date, time, location, points, error, eventID } = events;
+const mapStateToProps = ({ events, general }) => {
+    const { type, title, committee, name, description, date, time, location, points, error, eventID } = events;
+    const { committees } = general;
 
-    return { type, title, name, description, date, time, location, points, error, eventID };
+    return { type, title, name, description, date, time, location, points, error, eventID, committees, committee };
 };
 
 const mapDispatchToProps = {
@@ -236,6 +394,7 @@ const mapDispatchToProps = {
     editEvent,
     typeChanged,
     titleChanged,
+    committeeChanged,
     nameChanged,
     descriptionChanged,
     dateChanged,

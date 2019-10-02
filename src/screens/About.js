@@ -2,28 +2,14 @@ import React, { Component } from 'react';
 import {Text, View, StyleSheet }from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { List, ListItem } from 'react-native-elements';
+import { NavBar } from '../components/general';
 
   const menuItems = [
-    {
-      title: 'E-Board',
-      icon: 'people',
-      screen: 'EBoard'
-    },
-    {
-      title: 'Feedback / Suggestions',
-      icon: 'feedback',
-      screen: 'ComingSoon'
-    },
-    {
-      title: 'Contributors',
-      icon: 'folder-shared',
-      screen: 'ComingSoon'
-    },
-    {
-      title: 'Terms of Service',
-      icon: 'insert-drive-file',
-      screen: 'ComingSoon'
-    },
+    // {
+    //   title: 'E-Board',
+    //   icon: 'people',
+    //   screen: 'EBoard'
+    // },
     {
       title: 'Privacy Policy',
       icon: 'insert-drive-file',
@@ -43,13 +29,16 @@ class About extends Component {
 
   render() {
     return (
-      <View>
+      <View style={{flex: 1, backgroundColor:'#2C3239'}}>
+        <NavBar title="About" back onBack={() => Actions.pop()} />
         <List>
+        <View style={{backgroundColor:'#2C3239'}}>
           {
             menuItems.map((menuItem, i) => (
               <ListItem
                 key={i}
                 title={menuItem.title}
+                titleStyle={{ color: 'white'}}
                 leftIcon={{name: menuItem.icon}}
                 onPress={() => Actions[menuItem.screen]({ title: menuItem.title,
                                                           uri: menuItem.uri,
@@ -58,6 +47,7 @@ class About extends Component {
               />
             ))
           }
+          </View>
         </List>
       </View>
     );
