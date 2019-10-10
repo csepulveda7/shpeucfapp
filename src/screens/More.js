@@ -50,6 +50,12 @@ import {
       icon: 'settings',
       screen: 'BackEnd',
       privilege: "eboard"
+    },
+    {
+      title: 'Check In',
+      icon: 'settings',
+      screen: 'SimpleCheckIn',
+      privilege: "user"
     }
   ];
 

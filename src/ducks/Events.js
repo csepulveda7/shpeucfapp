@@ -7,6 +7,7 @@ const ACTIONS = createActiontypes([
     'FETCH_EVENTS',
     'CREATE_EVENT',
     'DELETE_EVENTS',
+    'CHECK_IN_SIMPLE',
     'CHECK_IN',
     'FETCH_CODE',
     'TYPE_CHANGED',
@@ -164,6 +165,18 @@ function makeCode(length) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
 
     return text;
+}
+
+export const checkInSimple = () => {
+  var {currentUser} = firebase.auth()
+
+  firebase.database().ref('tests/event').update({
+    [currentUser.uid]: true
+  })
+
+  return() => {
+
+  }
 }
 
 export const createEvent = (typeU, committeeU, nameU, descriptionU, dateU, timeU, locationU, pointsU ) => {

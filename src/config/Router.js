@@ -39,6 +39,7 @@ import Statistics from '../screens/Statistics'
 import More from '../screens/More'
 import PointsBreakDown from '../screens/PointsBreakDown'
 import Dashboard from '../screens/Dashboard'
+import SimpleCheckIn from '../screens/SimpleCheckIn'
 
 import {
   Resources,
@@ -48,6 +49,7 @@ import {
   EBoard,
   Version
 } from '../screens/';
+
 
 const RouterComponent = () => {
   return (
@@ -301,6 +303,11 @@ const RouterComponent = () => {
              component={Committees}
              title="Committees"
              hideTabBar
+            />
+            <Scene key="SimpleCheckIn"
+            component={SimpleCheckIn}
+            title="Simple Check In"
+            hideTabBar
             />
             <Scene key="Conventions"
              component={Conventions}
