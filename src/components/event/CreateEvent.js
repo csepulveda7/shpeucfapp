@@ -122,9 +122,9 @@ class CreateEvent extends Component {
             this.EventCreationError('Please enter how many points the event is worth');
         }else{
             if(this.props.title === "Create Event")
-            createEvent(type, committee, name, description, date, time, location, points);
+            createEvent(type, name, description, date, time, location, points);
             else
-            editEvent(type, committee, name, description, date, time, location, points, eventID);
+            editEvent(type, name, description, date, time, location, points, eventID);
             this.props.goToEvents();
         }
     }
@@ -205,8 +205,8 @@ class CreateEvent extends Component {
     }
 
     render() {
-            var stringType;
-            if(this.props.type === "Committee"){
+            var stringType = this.props.type;
+            /*if(this.props.type === "Committee"){
 
                 if(this.props.committee !== ''){
                     stringType = this.props.type + ": " + this.props.committee
@@ -219,7 +219,9 @@ class CreateEvent extends Component {
 
             else{
                 stringType = this.props.type;
-            }
+            }*/
+
+
             return (
                 <View style={styles.formContainerStyle}>
                     <View style={styles.headerStyle}>
@@ -233,10 +235,8 @@ class CreateEvent extends Component {
                             placeholder="Event Type"
                             value={stringType}
                             data={["Committee","Social Event","Volunteer Event", "GBM", "Workshop","Other"]}
-                            onSelect={(item) => {this.onTypeChange(item);
-                            this.setState({modalVisible: true})}}
+                            onSelect={(item) => {this.onTypeChange(item)}}
                             />
-                            {this.showCommittees()}
                             <Input
                             placeholder="Name"
                             value={this.props.name}

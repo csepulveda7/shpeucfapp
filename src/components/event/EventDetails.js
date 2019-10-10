@@ -11,7 +11,7 @@ import {
     FlatList,
     Linking
 } from 'react-native';
-import { Button, NavBar } from '../general'
+import { Button, NavBar, MultFilterPicker, Input } from '../general'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
     goToCreateEvent,
@@ -27,6 +27,7 @@ import {
     convertNumToDate,
     fetchAllUsers,
     emailListUsers,
+    filterChanged,
 } from '../../ducks'
 import { Actions } from 'react-native-router-flux';
 
@@ -36,7 +37,8 @@ class EventDetails extends Component {
     
 
     componentWillMount() {
-        {this.setState({modalVisible: false})}
+        this.props.filterChanged("");
+        {this.setState({modalVisible: false, pickerVisible: false})}
         this.props.fetchCode(this.props.eventID)
         if (this.props.privilege !== undefined && this.props.privilege.board) {
             this.props.fetchAllUsers()
@@ -111,6 +113,7 @@ class EventDetails extends Component {
                             title = "CHECK IN"
                             width = {dimension.width * .6}
                             onPress={() => {
+                            // console.error(JSON.stringify(this.props.checkIn))
                             if(this.props.code === this.state.text){
                                 this.checkinButton(this.props.eventID, this.props.points)
                                 // this.setState({modalVisible: false})
@@ -255,8 +258,52 @@ class EventDetails extends Component {
         Actions.pop()
     }
     checkinButton(ID, points){
-        this.props.checkIn(ID, points);
+        // console.error(JSON.stringify(this.props.checkIn))
+        this.props.checkIn(ID, points, null);
     }
+
+    renderPickMembers(){
+        const {
+            filter,
+            userList,
+            eventList,
+            eventID,
+            filterChanged
+        } = this.props;
+        if(!this.state.pickerVisible) return null;
+        return (
+            <View>
+                <MultFilterPicker
+                title={"Members"}
+                filter={filter}
+                data={userList}
+                excludeData={eventList[eventID].attendance}
+                onChangeText={filterChanged.bind(this)}
+                onClose={() => {
+                    this.setState({pickerVisible: false})
+                }}
+                onSelect={(selectedUsers) => {
+                    this.checkInMembers(selectedUsers)
+                    this.setState({pickerVisible: false})
+                 }}
+                />
+            </View>
+        )
+    }
+    
+    checkInMembers(selectedUsers){
+        const {
+            checkIn,
+            eventID,
+            points,
+        } = this.props;
+
+        let userArr = Object.values(selectedUsers);
+        userArr.forEach(function(userID){
+            checkIn(eventID, points, userID)
+        })
+    }
+
     renderButtons(){
         if(this.props.privilege !== undefined && this.props.privilege.board === true){
             return (
@@ -264,6 +311,10 @@ class EventDetails extends Component {
                     <Button 
                         title = "OPEN CHECK-IN"
                         onPress={this.openCheckInButton.bind(this)}
+                    />
+                    <Button 
+                        title = "CHECK MEMBERS IN"
+                        onPress={() => this.setState({pickerVisible: true})}
                     />
                     <Button 
                         title = "DELETE EVENT"
@@ -317,6 +368,7 @@ class EventDetails extends Component {
             return (
                 <View style={page}>
                     <NavBar title={name} back onBack={() => Actions.pop()} />
+                    {this.renderPickMembers()}
                     <View style={container}>
                         <View style={icon_container}>
                             <Ionicons style={[icon, textColor]} name="md-time" size={iconSize} color='#000000'/>
@@ -451,12 +503,13 @@ const styles = StyleSheet.create({
     }
 });
 
-const mapStateToProps = ({ events, user, members }) => {
+const mapStateToProps = ({ events, user, members, general }) => {
   const { type, name, description, date, time, location, points, eventID, error, code, eventList } = events;
   const { privilege } = user;
-  const { userList } = members
+  const { userList } = members;
+  const { filter } = general;
 
-  return { type, name, description, date, time, location, points, eventID, error, privilege, code, eventList, userList};
+  return { type, name, description, date, time, location, points, eventID, error, privilege, code, eventList, userList, filter};
 };
 
 const mapDispatchToProps = {
@@ -473,6 +526,7 @@ const mapDispatchToProps = {
     convertNumToDate,
     fetchAllUsers,
     emailListUsers,
+    filterChanged,
 }
 
 

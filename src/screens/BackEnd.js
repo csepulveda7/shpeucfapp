@@ -27,12 +27,18 @@ const menuItems = [
     //   icon: 'check',
     //   screen: 'Statistics'
     // },
+    //{
+      //title: 'Committees',
+      //icon: 'assignment-ind',
+      //screen: 'CommitteesBackEnd',
+      //privilege: 'eboard'
+    //},
     {
-      title: 'Committees',
+      tittle: 'User Check-in',
       icon: 'assignment-ind',
-      screen: 'CommitteesBackEnd',
+      screen: 'UserCheckIn',
       privilege: 'eboard'
-    },
+    }
 ];
 
 class BackEnd extends Component {

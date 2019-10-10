@@ -143,7 +143,6 @@ class Events extends Component {
 
   viewEvent(item) {
     this.props.typeChanged(item.type);
-    this.props.committeeChanged(item.committee);
     this.props.nameChanged(item.name)
     this.props.descriptionChanged(item.description)
     this.props.dateChanged(item.date)
@@ -162,9 +161,7 @@ class Events extends Component {
     } = styles
 
     var viewName = item.name;
-    if (item.committee !== ''){
-      viewName = item.committee + ": " + item.name;
-    }
+
     
     return (
       <TouchableOpacity onPress={this.viewEvent.bind(this,item)}>

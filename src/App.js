@@ -17,7 +17,7 @@ class App extends Component {
       databaseURL: "https://shpe-ucf.firebaseio.com",
       projectId: "shpe-ucf",
       storageBucket: "shpe-ucf.appspot.com",
-      messagingSenderId: "974032317047"
+      messagingSenderId: "974032317047",
     };
     firebase.initializeApp(config)
     

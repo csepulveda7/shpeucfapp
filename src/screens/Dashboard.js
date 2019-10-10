@@ -216,7 +216,6 @@ class Dashboard extends Component {
 				name,
 				date,
 				description,
-				committee
 			} = event;
 	
 			if (description !== undefined && description.length > 75) {
@@ -225,9 +224,6 @@ class Dashboard extends Component {
 			}
 
 			var viewName = name;
-			if (committee !== ''){
-			viewName = committee + ": "  + name;
-			}
 
 			return (
 				<TouchableOpacity style={{alignItems:'center'}} onPress={() => this.viewEvent(event)}>

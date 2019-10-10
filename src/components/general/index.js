@@ -8,6 +8,7 @@ export * from './Input';
 export * from './NavBar';
 export * from './PickerInput';
 export * from './FilterPicker';
+export * from './MultFilterPicker';
 export * from './DatePicker';
 export * from './Spinner';
 export * from './SegmentBtn';
