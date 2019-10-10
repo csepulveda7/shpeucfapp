@@ -168,15 +168,6 @@ function makeCode(length) {
 }
 
 export const checkInSimple = () => {
-  var {currentUser} = firebase.auth()
-
-  firebase.database().ref('tests/event').update({
-    [currentUser.uid]: true
-  })
-
-  return() => {
-
-  }
 }
 
 export const createEvent = (typeU, committeeU, nameU, descriptionU, dateU, timeU, locationU, pointsU ) => {
