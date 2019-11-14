@@ -11,7 +11,7 @@ import {
     FlatList,
     Linking
 } from 'react-native';
-import { Button, NavBar, MultFilterPicker, Input } from '../general'
+import { Button, NavBar, FilterPicker, Input } from '../general'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
     goToCreateEvent,
@@ -273,9 +273,10 @@ class EventDetails extends Component {
         if(!this.state.pickerVisible) return null;
         return (
             <View>
-                <MultFilterPicker
+                <FilterPicker
                 title={"Members"}
                 filter={filter}
+                type="Multiple"
                 data={userList}
                 excludeData={eventList[eventID].attendance}
                 onChangeText={filterChanged.bind(this)}

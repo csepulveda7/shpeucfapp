@@ -129,6 +129,7 @@ class CommitteeForm extends Component {
                             title={"Chair"}
                             filter={this.props.filter}
                             data={names}
+                            type="Single"
                             placeholder={placeholder}
                             onChangeText={this.props.filterChanged.bind(this)}
                             onSelect={(text, index) => {this.props.chairChanged({name: text, id: ids[index]});
