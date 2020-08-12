@@ -2,8 +2,8 @@ import firebase from "firebase";
 import { Actions } from "react-native-router-flux";
 import { createActionTypes } from "../utils/actions";
 import { Alert } from "../components";
+import Lodash from "lodash";
 
-// handle all things related to Users
 const ACTIONS = createActionTypes([
 	"SHOW_FIREBASE_ERROR",
 	"VERIFIED_USER",
@@ -32,15 +32,13 @@ const INITIAL_STATE = {
 		applied: false,
 		userCommittees: {}
 	},
-	loggedIn: null,
 	error: "",
 	loading: false
 };
 
 export default (state = INITIAL_STATE, action) => {
-	const {
-		payload
-	} = action;
+	const { payload } = action;
+
 	switch (action.type) {
 		case ACTIONS.SHOW_FIREBASE_ERROR:
 			return {
@@ -50,8 +48,7 @@ export default (state = INITIAL_STATE, action) => {
 		case ACTIONS.LOGIN_USER:
 			return {
 				...state,
-				loading: true,
-				error: ""
+				loading: true
 			};
 		case ACTIONS.LOGOUT_USER:
 			return {
@@ -113,10 +110,10 @@ const showFirebaseError = (dispatch, error) => {
  * @param {String}   password a password that meets the requirements
  */
 
-export const createUser = (user, email, password) => {
+export const createUser = user => {
 	return (dispatch) => {
-		firebase.auth().createUserWithEmailAndPassword(email, password)
-			.then(() => createUserSuccess(user))
+		firebase.auth().createUserWithEmailAndPassword(user.email, user.password)
+			.then(({ user: { uid } }) => createUserSuccess({ ...Lodash.omit(user, "password"), uid }))
 			.catch((error) => showFirebaseError(dispatch, error));
 	};
 };
@@ -200,18 +197,23 @@ export const resetPassword = (email) => {
  */
 
 export const loginUser = (email, password) => {
-	return (dispatch) => {
-		firebase.auth().signInWithEmailAndPassword(email, password)
-			.then(() => {
-				if (!firebase.auth().currentUser.emailVerified) {
-					Alert.alert("Account must be verified!\nPlease check your email for verification email");
-
-					return Promise.reject({
-						error: "Email not Verified"
-					});
-				}
-			})
-			.catch(error => showFirebaseError(dispatch, error));
+	return dispatch => {
+		return new Promise((resolve, reject) => {
+			firebase.auth().signInWithEmailAndPassword(email, password)
+				.then(() => {
+					if (!firebase.auth().currentUser.emailVerified) {
+						Alert.alert("Account must be verified!\nPlease check your email for verification email");
+						reject();
+					}
+					else {
+						resolve();
+					}
+				})
+				.catch(error => {
+					showFirebaseError(dispatch, error);
+					reject();
+				});
+		});
 	};
 };
 
@@ -244,6 +246,7 @@ export const loadUser = (userID) => {
 						...user,
 						privilege: privilegeSnapshot.val()
 					};
+
 					dispatch({
 						type: ACTIONS.LOAD_USER_AND_PRIVILEGE,
 						payload: userWithPrivilege
